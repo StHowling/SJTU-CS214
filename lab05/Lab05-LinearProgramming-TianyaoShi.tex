@@ -1,0 +1,405 @@
+\documentclass[12pt,a4paper]{article}
+%\usepackage{ctex}
+\usepackage{amsmath,amscd,amsbsy,amssymb,latexsym,url,bm,amsthm}
+\usepackage{epsfig,graphicx,subfigure}
+\usepackage{enumitem,balance}
+\usepackage{wrapfig}
+\usepackage{mathrsfs,euscript}
+\usepackage[usenames]{xcolor}
+\usepackage{hyperref}
+\usepackage[vlined,ruled,linesnumbered]{algorithm2e}
+\usepackage{array}
+\hypersetup{colorlinks=true,linkcolor=black}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{exercise}{Exercise}
+\newtheorem*{solution}{Solution}
+\newtheorem{definition}{Definition}
+\theoremstyle{definition}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+\newcommand{\postscript}[2]
+ {\setlength{\epsfxsize}{#2\hsize}
+  \centerline{\epsfbox{#1}}}
+
+\renewcommand{\baselinestretch}{1.0}
+
+\setlength{\oddsidemargin}{-0.365in}
+\setlength{\evensidemargin}{-0.365in}
+\setlength{\topmargin}{-0.3in}
+\setlength{\headheight}{0in}
+\setlength{\headsep}{0in}
+\setlength{\textheight}{10.1in}
+\setlength{\textwidth}{7in}
+\makeatletter \renewenvironment{proof}[1][Proof] {\par\pushQED{\qed}\normalfont\topsep6\p@\@plus6\p@\relax\trivlist\item[\hskip\labelsep\bfseries#1\@addpunct{.}]\ignorespaces}{\popQED\endtrivlist\@endpefalse} \makeatother
+\makeatletter
+\renewenvironment{solution}[1][Solution] {\par\pushQED{\qed}\normalfont\topsep6\p@\@plus6\p@\relax\trivlist\item[\hskip\labelsep\bfseries#1\@addpunct{.}]\ignorespaces}{\popQED\endtrivlist\@endpefalse} \makeatother
+
+\begin{document}
+\noindent
+
+%========================================================================
+\noindent\framebox[\linewidth]{\shortstack[c]{
+\Large{\textbf{Lab05-Linear Programming}}\vspace{1mm}\\
+CS214-Algorithm and Complexity, Xiaofeng Gao, Spring 2019.}}
+\begin{center}
+\footnotesize{\color{red}$*$ If there is any problem, please contact TA Jiahao Fan.}
+
+% Please write down your name, student id and email.
+\footnotesize{\color{blue}$*$ Name:{\textcolor{black}{Tianyao Shi}}  \quad Student ID:{\textcolor{black}{517021910623}} \quad Email: {\textcolor{black}{sthowling@sjtu.edu.cn}}}
+\end{center}
+
+\begin{enumerate}
+    \item
+    A company intends to invest $0.3$ million dollars in $2018$, with a proper combination of the following $3$ projects:
+    \begin{itemize}
+    \item \textbf{Project 1:} Invest at the beginning of a year, and can receive a $20\%$ profit of the investment in this project at the end of this year. Both the capital and profit can be invested at the beginning of next year;
+    \item \textbf{Project 2:} Invest at the beginning of $2018$, and can receive a $50\%$ profit of the investment in this project at the end of $2019$. The investment in this project cannot exceed $0.15$ million dollars;
+    \item \textbf{Project 3:} Invest at the beginning of $2019$, and can receive a $40\%$ profit of the investment in this project at the end of $2019$. The investment in this project cannot exceed $0.1$ million dollars.
+    \end{itemize}
+    Assume that the company will invest \emph{all} its money at the beginning of a year. Please design a scheme of investment in $2018$ and $2019$ which maximizes the overall sum of capital and profit at the end of $2019$.
+    \begin{enumerate}
+    \item
+    Formulate a linear programming with necessary explanations.
+
+    \item
+    Transform your LP into its standard form and slack form.
+
+    \item
+    Transform your LP into its dual form.
+
+    \item
+    Use the simplex method to solve your LP by step.
+    \end{enumerate}
+	\begin{solution}
+		\begin{enumerate}
+			\item Let us denote $x_1$ as the amount of money invested into Project 1 at the beginning of 2018, $x_2$ as that at the beginning of 2019, and $x_3,x_4$ as the amount of money invested into Project 2 and 3 accordingly. Based on their starting and ending date and return on investment, we can give a linear programming as the following:
+			\begin{align*}
+				\max\;\; 1.2x_2&+1.5x_3+1.4x_4\\
+				s.t. \quad x_1+x_3&=0.3,\\
+				x_2+x_4&=1.2x_1,\\
+				x_3&\leq0.15,\\
+				x_4&\leq0.1,\\
+				x_1,x_2,x_3,x_4&\geq0.
+			\end{align*}
+			\item To obtain its standard form, we only have to change the equivalent constraints into inequivalent ones, then change $\geq$ into $\leq$. The detail is shown as follows. \newline
+			\begin{minipage}{0.45\textwidth}
+				\begin{align*}
+				\max\;\; 1.2x_2&+1.5x_3+1.4x_4	\\
+				s.t. \quad x_1+x_3&\leq0.3,   \\
+				x_1+x_3&\geq0.3,  \\
+				x_2+x_4&\leq1.2x_1,  \\
+				x_2+x_4&\geq1.2x_1, \\
+				x_3&\leq0.15, \\
+				x_4&\leq0.1 ,\\
+				x_1,x_2,x_3,x_4&\geq0 . 
+				\end{align*} 
+			\end{minipage}
+			$\Rightarrow$
+			\begin{minipage}{0.45\textwidth}
+				\begin{align*}
+				\max\;\; 1.2x_2&+1.5x_3+1.4x_4\\
+				s.t. \quad x_1+x_3&\leq0.3,\\
+				-x_1-x_3&\leq-0.3,\\
+				-1.2x_1+x_2+x_4&\leq0,\\
+				1.2x_1-x_2-x_4&\leq0,\\
+				x_3&\leq0.15,\\
+				x_4&\leq0.1,\\
+				x_1,x_2,x_3,x_4&\geq0.
+				\end{align*} 
+			\end{minipage}
+			
+			And to obtain its slack form, we only need to change the inequilities in (a) into equilities. We introduce $x_5,x_6$ as slack variables, and it should be noticed that $x_1,x_2$ themselves act like slack variables to some extent, as we will see this in (d).\newline
+			\begin{minipage}{0.45\textwidth}
+				\begin{align*}
+				\max\;\; 1.2x_2&+1.5x_3+1.4x_4\\
+				s.t. \quad x_1+x_3&=0.3,\\
+				x_2+x_4&=1.2x_1,\\
+				x_3&\leq0.15,\\
+				x_4&\leq0.1,\\
+				x_1,x_2,x_3,x_4&\geq0.
+				\end{align*} 
+			\end{minipage}
+		$\Rightarrow$
+			\begin{minipage}{0.45\textwidth}
+				\begin{align*}
+				\max\;\; 1.2x_2&+1.5x_3+1.4x_4\\
+				s.t. \quad x_1+x_3&=0.3,\\
+				x_2+x_4&=1.2x_1,\\
+				x_3+x_5&=0.15,\\
+				x_4+x_6&=0.1,\\
+				x_1,x_2,x_3,x_4,x_5,x_6&\geq0.
+				\end{align*} 
+			\end{minipage}
+		\item Observing its standard form, we have 
+		\begin{align*}
+			\mathbf{A}=\begin{bmatrix}
+			1 & 0 &1 &0 \\
+			-1 &0 &-1 &0\\
+			-1.2 &1 &0&1\\
+			1.2&-1&0&-1\\
+			0&0&1&0\\
+			0&0&0&1
+			\end{bmatrix},\quad
+			\mathbf{b}=\begin{bmatrix}
+			0.3\\-0.3\\0\\0\\0.15\\0.1
+			\end{bmatrix},\quad
+		\mathbf{c}=\begin{bmatrix}
+		0\\1.2\\1.5\\1.4
+		\end{bmatrix}	
+		\end{align*}
+		 With the transforming formula between primal and dual form show in the slides:\newline
+		 \begin{minipage}{0.45\textwidth}
+		 	\begin{align*}
+		 	\max\;\; &\mathbf{c}^T\mathbf{x}\\
+		 	s.t.\quad \mathbf{Ax}&\leq\mathbf{b},\\
+		 	\mathbf{x}&\geq\mathbf{0}.
+		 	\end{align*} 
+		 \end{minipage}
+		 $\Rightarrow$
+		 \begin{minipage}{0.45\textwidth}
+		 	\begin{align*}
+		 	\min\;\; &\mathbf{y}^T\mathbf{b}\\
+		 	s.t.\quad \mathbf{y}^T\mathbf{A}&\geq\mathbf{c}^T,\\
+		 	\mathbf{y}&\geq\mathbf{0}.
+		 	\end{align*} 
+		 \end{minipage}
+		 We can easily write down its dual form:
+		 \begin{align*}
+		 	\min\;\; 0.3y_1-0.3y_2+0.15y_5&+0.1y_6\\
+		 s.t.\quad	y_1-y_2-1.2y_3+1.2y_4&\geq0,\\
+		 	y3-y4&\geq1.2,\\
+		 	y_1-y_2+y_5&\geq1.5,\\
+		 	y_3-y_4+y_5&\geq1.4,\\
+		 	y_i\geq 0(1&\leq i\leq6).
+		 \end{align*}
+	\item 	 We have already had its slack form, so the next step is to assign a basic solution. Observe that there are four equations in slack form yet 6 variables. Without loss of generality, let us define $x_3,x_4$ as nonbasic variables and $x_1,x_2,x_5,x_6$ as basic variables. With this we transform the original slack form so that only nonbasic variables exist in the objec function, and in constraints nonbasic and basic variables are in different hands.
+	\begin{align*}
+		\max\;\; 1.2(1.2(0.3-x_3)-x_4)+1.5x_3&+1.4x_4=0.432+0.06x_3+0.2x_4\\
+		s.t. \quad 0.3-x_3&=x_1,\\
+		1.2x_1-x_4&=x_2,\\
+		0.15-x_3&=x_5,\\
+		0.1-x_4&=x_6,\\
+		x_1,x_2,x_3,x_4,x_5,x_6&\geq0.
+	\end{align*}
+	 By setting all nonbasic variables to 0, we get the basic solution:
+	\begin{align*}
+		\overline{x}=(\overline{x_1},\overline{x_2},\cdots,\overline{x_6})=(0.3,0.36,0,0,0.15,0.1)
+	\end{align*}
+	Then we choose the nonbasic variable $x_3$, and find that $0.15-x_3x_5$ is the tightest constraint for $x_3$. We exchange the state of $x_3$ and $x_5$, making $x_5$ the new nonbasic variable. Namely, we have\newline
+	\begin{minipage}{0.45\textwidth}
+		\begin{align*}
+		\max\;\; 0.432+0.06&x_3+0.2x_4\\
+		s.t. \quad 0.3-x_3&=x_1,\\
+		1.2x_1-x_4&=x_2,\\
+		0.15-x_3&=x_5,\\
+		0.1-x_4&=x_6,\\
+		x_1,x_2,x_3,x_4,x_5,x_6&\geq0.
+		\end{align*} 
+	\end{minipage}
+	$\Rightarrow$
+	\begin{minipage}{0.45\textwidth}
+		\begin{align*}
+		\max\;\; 0.432+0.06(0.15&-x_5)+0.2x_4\\
+		s.t. \quad 0.3-x_3&=x_1,\\
+		1.2x_1-x_4&=x_2,\\
+		0.15-x_5&=x_3,\\
+		0.1-x_4&=x_6,\\
+		x_1,x_2,x_3,x_4,x_5,x_6&\geq0.
+		\end{align*} 
+	\end{minipage}
+		\begin{minipage}{0.45\textwidth}
+			\begin{align*}
+			\overline{x}=\{0.3,0.36,0,0,0.15,0.1\}
+			\end{align*} 
+		\end{minipage}
+		$\Rightarrow$
+		\begin{minipage}{0.45\textwidth}
+			\begin{align*}
+			\overline{x}=\{0.15,0.18,0.15,0,0,0.1\}
+			\end{align*} 
+		\end{minipage}
+		
+		We repeat this step with $x_4$, and finally we get a form with all coefficients in object function are negative. That is,
+		\begin{align*}
+		\max\;\; 0.461-0.06x_5&-0.2x_6\\
+		s.t. \quad 0.3-x_3&=x_1,\\
+		1.2x_1-x_4&=x_2,\\
+		0.15-x_5&=x_3,\\
+		0.1-x_6&=x_4,\\
+		x_1,x_2,x_3,x_4,x_5,x_6&\geq0.\\
+		\overline{x}=\{0.15,0.08,0.15,&0.1,0,0\}
+		\end{align*} 
+	The maximum of objective function is 0.461, when $x_5=x_6=0$. Therefore, the optimal solution for the original problem is 
+	\begin{align*}
+		(x_1^*,x_2^*,x_3^*,x_4^*)=(0.15,0.08,0.15,0.1),
+	\end{align*}
+	and the  maximum overall sum is 0.461.
+		\end{enumerate}
+		 
+	\end{solution}
+    \item
+    An engineering factory makes seven products (PROD 1 to PROD 7) on the following machines: four grinders, two vertical drills, three horizontal drills, one borer and one planer. Each product yields a certain contribution to profit (in \pounds/unit). These quantities (in \pounds/unit) together with the unit production times (hours) required on each process are given below. A dash indicates that a product does not require a process.
+
+    \begin{table}[htbp]
+      \scriptsize
+      \centering
+      \renewcommand\arraystretch{1.1}
+      \begin{tabular}{m{0.18\textwidth} m{0.07\textwidth}<{\centering} m{0.07\textwidth}<{\centering} m{0.07\textwidth}<{\centering} m{0.07\textwidth}<{\centering} m{0.07\textwidth}<{\centering} m{0.07\textwidth}<{\centering} m{0.07\textwidth}<{\centering}}
+      \hline
+       & \textbf{PROD 1} & \textbf{PROD 2} & \textbf{PROD 3} & \textbf{PROD 4} & \textbf{PROD 5} & \textbf{PROD 6} &  \textbf{PROD 7} \\\hline
+      Contribution to profit & 10 & 6 & 8 & 4 & 11 & 9 & 3 \\
+      Grinding & 0.5 & 0.7 & - & - & 0.3 & 0.2 & 0.5 \\
+      Vertical drilling & 0.1 & 0.2 & - & 0.3 & - & 0.6 & - \\
+      Horizontal drilling & 0.2 & - & 0.8 & - & - & - & 0.6 \\
+      Boring & 0.05 & 0.03 & - & 0.07 & 0.1 & - & 0.08 \\
+      Planing & - & - & 0.01 & - & 0.05 & - & 0.05 \\
+      \hline
+      \end{tabular}
+    \end{table}
+
+    There are marketing limitations on each product in each month, given in the following table:
+
+    \begin{table}[htbp]
+      \scriptsize
+      \centering
+      \renewcommand\arraystretch{1.1}
+      \begin{tabular}{m{0.1\textwidth} m{0.07\textwidth}<{\centering} m{0.07\textwidth}<{\centering} m{0.07\textwidth}<{\centering} m{0.07\textwidth}<{\centering} m{0.07\textwidth}<{\centering} m{0.07\textwidth}<{\centering} m{0.07\textwidth}<{\centering}}
+      \hline
+       & \textbf{PROD 1} & \textbf{PROD 2} & \textbf{PROD 3} & \textbf{PROD 4} & \textbf{PROD 5} & \textbf{PROD 6} &  \textbf{PROD 7} \\\hline
+      January & 500 & 1000 & 300 & 300 & 800 & 200 & 100 \\
+      February & 600 & 500 & 200 & 0 & 400 & 300 & 150 \\
+      March & 300 & 600 & 0 & 0 & 500 & 400 & 100 \\
+      April & 200 & 300 & 400 & 500 & 200 & 0 & 100 \\
+      May & 0 & 100 & 500 & 100 & 1000 & 300 & 0 \\
+      June & 500 & 500 & 100 & 300 & 1100 & 500 & 60 \\
+      \hline
+      \end{tabular}
+    \end{table}
+
+    It is possible to store up to 100 of each product at a time at a cost of \pounds0.5 per unit per month (charged at the end of each month according to the amount held at that time). There are no stocks at present, but it is desired to have a stock of exactly 50 of each type of product at the end of June. The factory works six days a week with two shifts of 8h each day. It may be assumed that each month consists of only 24 working days. Each machine must be down for maintenance in one month of the six. No sequencing problems need to be considered.
+
+    When and what should the factory make in order to maximize the total net profit?
+
+    \begin{enumerate}
+    \item
+    Use \emph{CPLEX Optimization Studio} to solve this problem. Describe your model in \emph{Optimization Programming Language} (OPL). Remember to use a separate data file (.dat) rather than embedding the data into the model file (.mod).
+
+    \item
+    Solve your model and give the following results.
+    \begin{enumerate}
+    \item
+    For each machine:
+    \begin{enumerate}
+    \item
+    the month for maintenance.
+    \end{enumerate}
+    \item
+    For each product:
+    \begin{enumerate}
+    \item
+    The amount to make in each month.
+    \item
+    The amount to sell in each month.
+    \item
+    The amount to hold at the end of each month.
+    \end{enumerate}
+    \item
+    The total selling profit.
+    \item
+    The total holding cost.
+    \item
+    The total net profit (selling profit minus holding cost).
+    \end{enumerate}
+    \end{enumerate}
+\begin{solution}
+	\begin{enumerate}
+		\item The month for maintenance for each machine. The table shows the number of machine down in each month.
+		\begin{table}[htbp]
+			\scriptsize
+			\centering
+			\renewcommand\arraystretch{1.1}
+			\begin{tabular}{m{0.1\textwidth} m{0.1\textwidth}<{\centering} m{0.1\textwidth}<{\centering} m{0.1\textwidth}<{\centering} m{0.1\textwidth}<{\centering} m{0.1\textwidth}<{\centering} }
+				\hline
+				& \textbf{grinder} & \textbf{vertical drill} & \textbf{horizontal drill} & \textbf{borer} & \textbf{planer}  \\\hline
+				January & 0 & 0 & 1 & 0 & 0  \\
+				February & 1 & 1 & 0 & 0 & 0  \\
+				March & 0 & 0 & 2 & 0 & 0  \\
+				April & 3 & 0 & 0 & 1 & 1  \\
+				May & 0 & 1 & 0 & 0 & 0  \\
+				June & 0 & 0 & 0 & 0 & 0  \\
+				\hline
+			\end{tabular}
+		\end{table}
+	\item \begin{enumerate}
+		\item The amount to make in each month
+		\begin{table}[htbp]
+			\scriptsize
+			\centering
+			\renewcommand\arraystretch{1.1}
+			\begin{tabular}{m{0.1\textwidth} m{0.07\textwidth}<{\centering} m{0.07\textwidth}<{\centering} m{0.07\textwidth}<{\centering} m{0.07\textwidth}<{\centering} m{0.07\textwidth}<{\centering} m{0.07\textwidth}<{\centering} m{0.07\textwidth}<{\centering}}
+				\hline
+				& \textbf{PROD 1} & \textbf{PROD 2} & \textbf{PROD 3} & \textbf{PROD 4} & \textbf{PROD 5} & \textbf{PROD 6} &  \textbf{PROD 7} \\\hline
+				January & 500 & 1000 & 300 & 300 & 800 & 200 & 100 \\
+				February & 600 & 500 & 200 & 0 & 400 & 300 & 150 \\
+				March & 400 & 700 & 100 & 100 & 600 & 400 & 200 \\
+				April & 0 & 0 & 0 & 500 & 0 & 0 & 0 \\
+				May & 0 & 100 & 500 & 100 & 1000 & 300 & 0 \\
+				June & 550 & 550 & 150 & 350 & 1150 & 550 & 110 \\
+				\hline
+			\end{tabular}
+		\end{table}
+	\item The amount to sell in each month
+	\begin{table}[htbp]
+		\scriptsize
+		\centering
+		\renewcommand\arraystretch{1.1}
+		\begin{tabular}{m{0.1\textwidth} m{0.07\textwidth}<{\centering} m{0.07\textwidth}<{\centering} m{0.07\textwidth}<{\centering} m{0.07\textwidth}<{\centering} m{0.07\textwidth}<{\centering} m{0.07\textwidth}<{\centering} m{0.07\textwidth}<{\centering}}
+			\hline
+			& \textbf{PROD 1} & \textbf{PROD 2} & \textbf{PROD 3} & \textbf{PROD 4} & \textbf{PROD 5} & \textbf{PROD 6} &  \textbf{PROD 7} \\\hline
+			January & 500 & 1000 & 300 & 300 & 800 & 200 & 100 \\
+			February & 600 & 500 & 200 & 0 & 400 & 300 & 150 \\
+			March & 300 & 600 & 0 & 0 & 500 & 400 & 100 \\
+			April & 100 & 100 & 100 & 100 & 0 & 0 & 100 \\
+			May & 0 & 100 & 500 & 100 & 1000 & 300 & 0 \\
+			June & 500 & 500 & 100 & 300 & 1100 & 500 & 60 \\
+			\hline
+		\end{tabular}
+	\end{table}
+\newline
+	\item The amount to hold at the end of each month
+	
+	\begin{table}[ht]
+		\scriptsize
+		\centering
+		\renewcommand\arraystretch{1.1}
+		\begin{tabular}{m{0.1\textwidth} m{0.07\textwidth}<{\centering} m{0.07\textwidth}<{\centering} m{0.07\textwidth}<{\centering} m{0.07\textwidth}<{\centering} m{0.07\textwidth}<{\centering} m{0.07\textwidth}<{\centering} m{0.07\textwidth}<{\centering}}
+			\hline
+			& \textbf{PROD 1} & \textbf{PROD 2} & \textbf{PROD 3} & \textbf{PROD 4} & \textbf{PROD 5} & \textbf{PROD 6} &  \textbf{PROD 7} \\\hline
+			January & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+			February & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+			March & 100 & 100 & 100 & 100 & 100 & 0 & 100 \\
+			April & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+			May & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+			June & 50 & 50 & 50 & 50 & 50 & 50 & 50 \\
+			\hline
+		\end{tabular}
+	\end{table}
+	\end{enumerate}
+	\item The total selling point is 103730.
+	\item The total holding cost is 475.
+	\item The total net profit is 103255.
+	\end{enumerate}
+\end{solution}
+\end{enumerate}
+
+\vspace{20pt}
+
+\textbf{Remark:} You need to include your .mod, .dat, .pdf and .tex files in your uploaded .zip file.
+
+%========================================================================
+\end{document}

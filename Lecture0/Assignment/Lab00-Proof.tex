@@ -1,0 +1,184 @@
+\documentclass[12pt,a4paper,UTF8]{article}
+\usepackage{ctex}
+\usepackage{ulem}
+\usepackage{amsmath,amscd,amsbsy,amssymb,latexsym,url,bm,amsthm}
+\usepackage{epsfig,graphicx,subfigure}
+\usepackage{enumitem,balance}
+\usepackage{wrapfig}
+\usepackage{mathrsfs,euscript}
+\usepackage[usenames]{xcolor}
+\usepackage{hyperref}
+\usepackage[vlined,ruled,linesnumbered]{algorithm2e}
+\hypersetup{colorlinks=true,linkcolor=black}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{exercise}{Exercise}
+\newtheorem*{solution}{Solution}
+\newtheorem{definition}{Definition}
+\theoremstyle{definition}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+\newcommand{\postscript}[2]
+ {\setlength{\epsfxsize}{#2\hsize}
+  \centerline{\epsfbox{#1}}}
+
+\renewcommand{\baselinestretch}{1.0}
+
+\setlength{\oddsidemargin}{-0.365in}
+\setlength{\evensidemargin}{-0.365in}
+\setlength{\topmargin}{-0.3in}
+\setlength{\headheight}{0in}
+\setlength{\headsep}{0in}
+\setlength{\textheight}{10.1in}
+\setlength{\textwidth}{7in}
+\makeatletter \renewenvironment{proof}[1][Proof] {\par\pushQED{\qed}\normalfont\topsep6\p@\@plus6\p@\relax\trivlist\item[\hskip\labelsep\bfseries#1\@addpunct{.}]\ignorespaces}{\popQED\endtrivlist\@endpefalse} \makeatother
+\makeatletter
+\renewenvironment{solution}[1][Solution] {\par\pushQED{\qed}\normalfont\topsep6\p@\@plus6\p@\relax\trivlist\item[\hskip\labelsep\bfseries#1\@addpunct{.}]\ignorespaces}{\popQED\endtrivlist\@endpefalse} \makeatother
+
+\begin{document}
+\noindent
+
+%========================================================================
+\noindent\framebox[\linewidth]{\shortstack[c]{
+\Large{\textbf{Lab00-Proof}}\vspace{1mm}\\
+CS214-Algorithm and Complexity, Xiaofeng Gao, Spring 2019.}}
+\begin{center}
+\vspace{10pt}
+% Please write down your name, student id and email.
+\footnotesize{\color{blue}$*$ Name:\uline{\textcolor{black}{史}\textcolor{black}{天}\textcolor{black}{尧}}  \quad Student ID:\uline{\textcolor{black}{517021910623}} \quad Email: \uline{\textcolor{black}{sthowling@sjtu.edu.cn}}}
+\end{center}
+
+\begin{enumerate}
+    \item
+    Prove that for any integer $n>2$, there is a prime $p$ satisfying $n<p<n!$. {\color{blue}(Hint: consider a prime factor $p$ of $n!-1$ and prove by contradiction)}
+    \begin{proof}	
+    	\begin{minipage}[t]{0.8\textwidth}
+    		\begin{lemma} \label{lem:1}
+    			Two adjacent natural numbers are co-prime.
+    		\end{lemma}
+    		\begin{proof}
+    			Consider that the two adjacent natural numbers are $n$ and $n+1$. If they are not co-prime, then they must have a common divisor other than $1$, say a postive integer $a$. Therefore we have 
+    			\begin{align*}
+    				n=ap, \quad n+1=aq,
+    			\end{align*}
+    			where $p$ and $q$ are intergers, and since $n+1>n$, $a>0$, we have that $q>p$, which is equivalent as $q-p\geq 1$. Consequently,
+    			\begin{align*}
+    				n+1-n&=aq-ap,\\
+    				1&=a(q-p),
+    			\end{align*}
+    			where $q-p\geq 1$. Therefore we derive that $a$ equals $1$, which is in contradiction with the assumption. We can conclude that the original assumption is false.
+    		\end{proof}   
+    	\end{minipage}
+        
+        
+        With Lemma \eqref{lem:1}, we know that $n!$ and $n!-1$ are co-prime. Except for $1$, they do not have any common divisor. 
+        
+        Assume that for any integer $n>2$, there is not a prime $p$ satisfying $n<p<n!$, i.e. no integer between $n$ and $n!$ is a prime. Thus $n!-1$ has at least one prime factor, which is not itself in this case. 
+        Moreover, all natural numbers that are not larger than $n$ are divisors of $n!$, and none of them is divisor of $n!-1$, since $n!$ and $n!-1$ are co-prime. Therefore a prime factor of $n!-1$ must be larger than $n$, which means there is a prime $p$ satisfying $n<p<n!$. We have derived a contradiction,
+        which allows us to conclude that our original assumption is false.
+    \end{proof}
+
+
+    \item
+    Use the minimal counterexample principle to prove that for any integer $n>17$, there exist integers $i_n\ge 0$ and $j_n\ge 0$, such that $n = i_n \times 4 + j_n \times 7$.
+    \begin{proof}
+        Define $P(n)$ be the statement that \textquotedblleft there exist integers $i_n\ge 0$ and $j_n\ge 0$, such that $n = i_n \times 4 + j_n \times 7$\textquotedblright. If $P(n)$ is not true for every $n>17$, then there are values for which $P(n)$ is false, and there must be a smallest value, say $n=k$.
+        
+        Since $18=1\times4+2\times7$, i.e. $P(18)$ is true, we have $k\geq19$ and $k-1\geq18$. 
+        
+        Since $k$ is the smallest value for which $P(k)$ is false, $P(k-1)$ is true, i.e. $k-1=i_k\times4+j_k\times7$, where $i_k, j_k\in\mathbb{N}$. We can derive that
+        \begin{align*}
+        	k=k-1+1&=i_k\times4+j_k\times7+1\\
+        	       &=i_k\times4+j_k\times7+(2\times4-1\times7)\\
+        	       &=(i_k+2)\times4+(j_k-1)\times7.
+        \end{align*}
+        When $j_k\geq1$, $j_k-1\geq0$, we have that $P(k)$ is true.
+        
+        When $j_k=0$, since $k-1\geq18$, we have $i_k\geq5$, as $k-1$ now is divisible by $4$, and the smallest possible value of $k-1$ is $20$.
+        
+        Therefore in this case, 
+        \begin{align*}
+        	k=k-1+1&=i_k\times4+(3\times7-5\times4)\\
+        	&=(i_k-5)\times4+3\times7.
+        \end{align*}
+        Since $i_k\geq5$, $i_k-5\geq0$. This means that $P(k)$ is true.
+        
+        In conclusion, we have derived a contradiction,
+        which allows us to conclude that our original assumption is false.
+    \end{proof}
+
+    \item
+    Suppose $a_0=1$, $a_1=2$, $a_2=3$, and $a_k=a_{k-1}+a_{k-2}+a_{k-3}$ for $k \ge 3$. Use the strong principle of mathematical induction to prove that $a_n \le 2^n$ for any integer $n\ge 0$.
+    \begin{proof}
+        Define $P(n)$ be the statement that $a_n\leq2^n$.
+        
+        \textbf{Basis step:} When $n=0$, $a_0=1\leq2^0$. $P(0)$ is true.
+        
+        When $n=1$, $a_1=2\leq2^1$. $P(1)$ is true.
+        
+        When $n=2$, $a_2=3\leq2^2$. $P(2)$ is true.
+        
+     
+        
+        \textbf{Induction hypothesis:} Assume that for some $k\geq2$ and for any $n$ satisfying $2\leq n\leq k$, $P(n)$ is true.
+        
+        \textbf{Proof of induction step:} Now let us prove  $P(k + 1)$.
+        
+        When $n=k+1$, $a_{k+1}=a_k+a_{k-1}+a_{k-2}$. From the hypothesis, we know that $a_k\leq2^k$, $a_{k-1}\leq2^{k-1}$, and $a_{k-2}\leq2^{k-2}$. Therefore we have
+        \begin{align*}
+        	a_{k+1}&=a_k+a_{k-1}+a_{k-2}\\
+        		   &\leq2^k+2^{k-1}+2^{k-2}\\
+        		   &\leq2^k+2^{k-1}+2^{k-1}=2^k+2^k=2^{k+1}.
+        \end{align*}
+        
+        
+    \end{proof}
+
+    \item
+    Prove, by mathematical induction, that
+    $$
+    (n+1)^2+(n+2)^2+(n+3)^2+\cdots +(2n)^2=\dfrac{n(2n+1)(7n+1)}{6}
+    $$
+    is true for any integer $n\geq 1$.
+    \begin{proof}
+        Define $P(n)$ be the statement that 
+        $$
+        (n+1)^2+(n+2)^2+(n+3)^2+\cdots +(2n)^2=\dfrac{n(2n+1)(7n+1)}{6}.
+        $$
+         We will try to prove that $P(n)$ is true
+        for every $n\geq1$.
+        
+        \textbf{Basis step:} When n equals $1$, $1+1=2\times1=2$. We have
+        $$
+        2^2=4=1\times(2\times1+1)\times(7\times1+1)\div6,
+        $$
+        so $P(1)$ is true.
+        
+        \textbf{Induction hypothesis:} Assume that $P(k)$ is true for some $k\geq1$. Then we have $(k+1)^2+(k+2)^2+(k+3)^2+\cdots+(2k)^2=k(2k+1)(7k+1)/6$.
+        
+        \textbf{Proof of induction step:} Now let us prove that $P(k + 1)$ is true.
+        \begin{align*}
+        &(k+1+1)^2+(k+1+2)^2+(k+1+3)^2+\cdots+(2k)^2+(2k+1)^2+\left(2(k+1)\right)^2\\
+        =&(k+1)^2+(k+2)^2+(k+3)^2+\cdots+(2k)^2+(2k+1)^2+(2k+2)^2-(k+1)^2\\
+        =&\dfrac{k(2k+1)(7k+1)}{6}+(2k+1)^2+3(k+1)^2\\
+        =&\dfrac{k(2k+1)(7k+1)+6(2k+1)^2+18(k+1)^2}{6}\\
+        =&\dfrac{(2k+1)(7k^2+k+12k+6)+18(k+1)^2}{6}\\
+        =&\dfrac{(2k+1)(7k+6)(k+1)+18(k+1)^2}{6}\\
+        =&\dfrac{(k+1)(14k^2+21k+6+18k+18)}{6}\\
+        =&\dfrac{(k+1)(2k+3)(7k+8)}{6}\\
+        =&\dfrac{(k+1)(2(k+1)+1)(7(k+1)+1)}{6}
+        \end{align*}
+    \end{proof}
+
+\end{enumerate}
+
+\vspace{20pt}
+
+
+
+%========================================================================
+\end{document}

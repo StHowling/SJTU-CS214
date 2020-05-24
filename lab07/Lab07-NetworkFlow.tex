@@ -1,0 +1,124 @@
+\documentclass[12pt,a4paper]{article}
+%\usepackage{ctex}
+\usepackage{amsmath,amscd,amsbsy,amssymb,latexsym,url,bm,amsthm}
+\usepackage{epsfig,graphicx,subfigure}
+\usepackage{enumitem,balance}
+\usepackage{wrapfig}
+\usepackage{mathrsfs,euscript}
+\usepackage[usenames]{xcolor}
+\usepackage{hyperref}
+\usepackage[vlined,ruled,linesnumbered]{algorithm2e}
+\hypersetup{colorlinks=true,linkcolor=black}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{exercise}{Exercise}
+\newtheorem*{solution}{Solution}
+\newtheorem{definition}{Definition}
+\theoremstyle{definition}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+\newcommand{\postscript}[2]
+ {\setlength{\epsfxsize}{#2\hsize}
+  \centerline{\epsfbox{#1}}}
+
+\renewcommand{\baselinestretch}{1.0}
+
+\setlength{\oddsidemargin}{-0.365in}
+\setlength{\evensidemargin}{-0.365in}
+\setlength{\topmargin}{-0.3in}
+\setlength{\headheight}{0in}
+\setlength{\headsep}{0in}
+\setlength{\textheight}{10.1in}
+\setlength{\textwidth}{7in}
+\makeatletter \renewenvironment{proof}[1][Proof] {\par\pushQED{\qed}\normalfont\topsep6\p@\@plus6\p@\relax\trivlist\item[\hskip\labelsep\bfseries#1\@addpunct{.}]\ignorespaces}{\popQED\endtrivlist\@endpefalse} \makeatother
+\makeatletter
+\renewenvironment{solution}[1][Solution] {\par\pushQED{\qed}\normalfont\topsep6\p@\@plus6\p@\relax\trivlist\item[\hskip\labelsep\bfseries#1\@addpunct{.}]\ignorespaces}{\popQED\endtrivlist\@endpefalse} \makeatother
+
+\begin{document}
+\noindent
+
+%========================================================================
+\noindent\framebox[\linewidth]{\shortstack[c]{
+\Large{\textbf{Lab07-Network Flow}}\vspace{1mm}\\
+CS214-Algorithm and Complexity, Xiaofeng Gao, Spring 2019.}}
+
+
+\begin{center}
+\footnotesize{\color{red}$*$ If there is any problem, please contact TA Mingran Peng.}\par
+% Please write down your name, student id and email.
+\footnotesize{\color{blue}$*$ Name:{\textcolor{black}{Tianyao Shi}}  \quad Student ID:{\textcolor{black}{517021910623}} \quad Email: {\textcolor{black}{sthowling@sjtu.edu.cn}}}
+\end{center}
+\begin{enumerate}
+    
+    \item
+    Remember the network problems in last lab?\par
+    Consider there is a network consists $n$ computers. For some pairs of computers, a wire $i$ exists in the pair, which means these two computers can communicate with delay $t_i$.\par
+The distance of two computers are defined as their communication delay. Design an algorithm to compute the maximum distance in the network.\par
+You need to provide the pseudo code and analyze the time complexity.\par
+\begin{solution}
+  Just as stated in last lab, we can establish a graph $G=(V,E)$ where $V$ is the set of computer as vertices, $E$ is the set of wires as edges with weight $w(e_i)=t_i$. The background of this problem ensures that $\forall i, t_i\geq0$, so there is not negative cycle. 
+  
+  As demonstrated in wechat group, the actual definition of the distance between two computers is there \emph{minimum communication delay}. Therefore the problem takes shape that is first to find the shortest path between all pairs, then pick up the longest shortest path between all pairs. Since there is not negative cycle, we can simply run Flyod-Warshall on this graph to get a matrix, then pick up the value of the largest element(s) in the matrix. Algorithm \ref{Alg_maxdis}  shows the process.\newline
+  \begin{minipage}[t]{0.9\textwidth}
+    \begin{algorithm}[H]
+      \BlankLine
+      \SetKwInOut{Input}{input}
+      \SetKwInOut{Output}{output}
+      \caption{Maximum distance in the network}\label{Alg_maxdis}
+      \Input{An $n\times n$ adjacent matrix $A$ of graph $G$, where $a_{ij}=w(e_{ij})$.}
+      \Output{Maximum length of shortest paths between all pairs.}
+      \BlankLine
+      max$\leftarrow 0$\;
+     \For{$k\leftarrow1$ to $n$}{
+       \For{$j\leftarrow1$ to $n$} {
+         \For{$i\leftarrow1$ to $n$} {
+           \If{$a_{ij}>a_{ik}+a_{kj}$} {$a_{ij}\leftarrow a_{ik}+a_{kj}$\;}
+         }
+       }
+     }
+     \For{$j\leftarrow1$ to $n$} {
+      \For{$i\leftarrow1$ to $n$} {
+        \If{$a_{ij}>$max} {max$\leftarrow a_{ij}$\;}
+      }
+    }
+    \Return{max}\;
+    \end{algorithm}
+    \end{minipage}
+
+    The time complexity of Flyod-Warshall to compute all-pair shortest path is $\Theta(n^3)$, and traversing the matrix to find the largest element is of complexity $\Theta(n^2)$, so in all the time complexity of this algorithm is $\Theta(n^3)$, where $n=|V|$. 
+\end{solution}
+
+
+\item
+   Suppose you are traveling through a country defined as a directed graph $G=(V,E)$. You start from vertex $s$ and want to go to $e$. For each $i\in E$, there is a $w_i$ regarding the cost for traveling via $i$. Some times $w_i<0$ which means you can earn money by traveling.(Do not ask why.) Here you need to design an algorithm satisfying the following demands:\par
+   \begin{enumerate}
+   \item Find the minimum cost from $s$ to $e$. The problem guarantee that there is a path from $s$ to $e$.\par
+   \item Indicate whether there is a circle in $G$, that by traveling through this circle you can earn money continually.\par
+   \end{enumerate}
+   You need to provide the pseudo code and analyze the time complexity.\par
+
+\item
+
+\color{red}(Bonus)\color{black}
+Suppose you are a staff of SJTU who is in charge of arranging lessons. Suppose you have $n$ time slots, $n$ lessons and $n$ professors. Clearly, you should assign exactly one time slot and one lesson to every professor. A lesson or a time slot should be assigned to exactly one professor. \par
+For each professor, he will prefer some certain time slots among these $n$ time slots, and prefer to taught some certain lessons among these $n$ lessons.\par
+A professor will be satisfied iff you arrange him both his preferred lesson and preferred time slot. Your goal is to satisfy as many professors as you can. Design an algorithm to output how many professors can you satisfy at most.\par 
+Notice that this problem is really hard, even draft idea is welcomed.\par
+\color{blue} (Hint: Treat time slots, lessons, professors as nodes. Construct edges according to professors' preference. Use network flow algorithm to solve it. )
+
+
+
+    
+
+\end{enumerate}
+
+\vspace{20pt}
+
+\textbf{Remark:} You need to include your .pdf and .tex files in your uploaded .rar or .zip file.
+
+%========================================================================
+\end{document}

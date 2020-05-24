@@ -1,0 +1,212 @@
+\documentclass[12pt,a4paper]{article}
+%\usepackage{ctex}
+\usepackage{amsmath,amscd,amsbsy,amssymb,latexsym,url,bm,amsthm}
+\usepackage{epsfig,graphicx,subfigure}
+\usepackage{enumitem,balance}
+\usepackage{wrapfig}
+\usepackage{mathrsfs,euscript}
+\usepackage[usenames]{xcolor}
+\usepackage{hyperref}
+\usepackage[vlined,ruled,linesnumbered]{algorithm2e}
+\hypersetup{colorlinks=true,linkcolor=black}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{exercise}{Exercise}
+\newtheorem*{solution}{Solution}
+\newtheorem{definition}{Definition}
+\theoremstyle{definition}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+\newcommand{\postscript}[2]
+ {\setlength{\epsfxsize}{#2\hsize}
+  \centerline{\epsfbox{#1}}}
+
+\renewcommand{\baselinestretch}{1.0}
+
+\setlength{\oddsidemargin}{-0.365in}
+\setlength{\evensidemargin}{-0.365in}
+\setlength{\topmargin}{-0.3in}
+\setlength{\headheight}{0in}
+\setlength{\headsep}{0in}
+\setlength{\textheight}{10.1in}
+\setlength{\textwidth}{7in}
+\makeatletter \renewenvironment{proof}[1][Proof] {\par\pushQED{\qed}\normalfont\topsep6\p@\@plus6\p@\relax\trivlist\item[\hskip\labelsep\bfseries#1\@addpunct{.}]\ignorespaces}{\popQED\endtrivlist\@endpefalse} \makeatother
+\makeatletter
+\renewenvironment{solution}[1][Solution] {\par\pushQED{\qed}\normalfont\topsep6\p@\@plus6\p@\relax\trivlist\item[\hskip\labelsep\bfseries#1\@addpunct{.}]\ignorespaces}{\popQED\endtrivlist\@endpefalse} \makeatother
+
+\begin{document}
+\noindent
+
+%========================================================================
+\noindent\framebox[\linewidth]{\shortstack[c]{
+\Large{\textbf{Lab10-Approximation \& Randomized Algorithm}}\vspace{1mm}\\
+CS214-Algorithm and Complexity, Xiaofeng Gao, Spring 2019.}}
+
+
+\begin{center}
+\footnotesize{\color{red}$*$ If there is any problem, please contact TA Mingran Peng.}\par
+% Please write down your name, student id and email.
+\footnotesize{\color{blue}$*$ Name:{\textcolor{black}{Tianyao Shi}}  \quad Student ID:{\textcolor{black}{517021910623}} \quad Email: {\textcolor{black}{sthowling@sjtu.edu.cn}}}
+\end{center}
+\begin{enumerate}
+    
+
+\item Given a CNF $\Phi$ with $n$ boolean variables $\{x_i\}_{i=1}^n$ and $m$ clauses, with each clause consisting of $3$ boolean variables. For example $\Phi=C_1\wedge C_2 =(x_1\vee \overline{x_2}\vee \overline{x_4})\wedge (\overline{x_1} \vee \overline{x_2} \vee \overline{x_3})$. Assume that $\Phi$ is satisfiable, the goal is to find the feasible assignment of $\{x_i\}_{i=1}^n$ with \textbf{fewest true boolean variables}.
+\begin{enumerate}
+\item  Please formulate it into integer programming.\par
+\item  Design an approximation algorithm based on deterministing rounding. Choose its approximation ratio and explain. Pseudo code is needed.\par
+\end{enumerate}
+\begin{solution}
+  \begin{enumerate}
+    \item Let $\mathbf{C}$ denote the set of all clauses. For each clause $c\in\mathbf{C}$, let $S_c^+$ and $S_c^-$ denote the set of boolean variables occurring nonnegated and negated in $c$ accordingly. The truth assignment is encoded by $\mathbf{y}$. Picking $y_i=1$ denotes setting $x_i$ to be True, and $y_i=0$ denotes setting $x_i$ to be False. Then we can formulate an integer linear programming as follows:
+    \begin{align*}
+      &\text{minimize} \quad \sum_{i=1}^ny_i\\
+      &\text{subject to} \quad \forall c\in \mathbf{C}:\sum_{x_i\in S_c^+}y_i+\sum_{x_i\in S_c^-}(1-y_i)\geq 1\\
+      &\qquad\qquad\quad\;\forall i:y_i\in\{0,1\}
+    \end{align*}
+    \item We can relax the ILP to be an LP as follows:
+    \begin{align*}
+      &\text{minimize} \quad \sum_{i=1}^ny_i\\
+      &\text{subject to} \quad \forall c\in \mathbf{C}:\sum_{x_i\in S_c^+}y_i+\sum_{x_i\in S_c^-}(1-y_i)\geq 1\\
+      &\qquad\qquad\quad\;\forall i:0\leq y_i\leq 1
+    \end{align*}
+    Note that the constraint $y_i\leq1$ is actually redundant. Proof of this claim is that, suppose there is a solution where some $y_i>1$. In this case we have that $1-y_i<0$. Then why not set it to exactly 1? If $x_i\in S_c^+$, reducing $y_i$ to 1 still ensures the sum of all $y_i$ and $1-y_i$ to be greater than or equal to 1. If  $x_i\in S_c^-$, then reducing $y_i$ to 1 turns $1-y_i$ from a negative number to be 0, which  makes the sum of all $y_i$ and $1-y_i$ to be even greater. In both case, the constraint will be satisfied, yet we derive a smaller $\sum_{i=1}^ny_i$. Therefore the nature of this problem restricts $y_i$ to be smaller than or equal to 1.
+
+    Then there follows the deterministic rounding algorithm. See Algorithm~\ref{Alg-rounding}.\newline
+    \begin{minipage}{0.8\textwidth}
+      \centering
+      \begin{algorithm}[H]
+      \caption{Deterministic LP-rounding algorithm}\label{Alg-rounding}
+      \KwIn{A CNF $\Phi$ with $n$ boolean variables $\{x_i\}_{i=1}^n$ and $m$ clauses $\mathbf{C}=\{c_1,\cdots,c_m\}$;}
+      \KwOut{A feasible assignment encoded by $\mathbf{y}$}
+      \BlankLine
+      Let $ILP_{p}$ be the integer linear programming formulation of the problem\;
+        Let $LP_{p}$ be the problem obtained from $ILP_{p}$ by LP-relaxation\;
+        Let $\mathbf{y}^*$ be the optimal solution for $LP_{p}$\;
+        \ForEach{$y_i^*$ in $\mathbf{y}^*$}{
+          \If{$\forall c\in\mathbf{C},x_i\notin S_c^-$}{
+            \eIf{$y_i^*\geq\frac{1}{3}$}{round $y_i$ to be 1\;}{round $y_i$ to be 0\;}
+          }
+          \If{$\forall c\in\mathbf{C},x_i\notin S_c^+$}{
+            \eIf{$y_i^*\leq\frac{2}{3}$}{round $y_i$ to be 0\;}{round $y_i$ to be 1\;}
+          }
+        }
+        \Return{$\mathbf{y}$}\;
+      \end{algorithm}
+      \end{minipage}
+
+      Unfortunately this algorithm is incomplete as it does not round such $y_i^*$ where the corresponding $x_i$ presents both nonnegated and negated in different clauses. I have not come up with the plan to deal with this part, as the proof that one rounding strategy of this problem gives feasible solution has some annoying natures. 
+      
+      We hope to prove that after rounding, $\forall c\in \mathbf{C}$, $c$ is still satisfied. To achieve that, nonnegated and negated forms require the rounding direction to be different and their ranges overlap. When $x_i$ presents both forms,  it is hard to determine which direction to round $y_i$ into. If we can \emph{transform the oringinal CNF $\Phi$ into a new form where no boolean variable $x_i$ presents both negated and nonnegated form in its clauses,} then we can prove that Algorithm~\ref{Alg-rounding} provides a feasible solution \emph{with an approximation ratio of 3}, with input being the converted CNF.
+
+      \begin{proof}
+        \begin{itemize}
+          \item \textbf{Feasible solution:} For each boolean varibale $x_i$, it either presents negated form or nonnegated form. Consider any clause $c$ after rounding. Suppose $c$ is not satisfied, then $\forall x_i\in S_c^+$, $y_i^*<1/3$ and $\forall x_i\in S_c^-$, $y_i^*>2/3$, then 
+          $$
+          \sum_{x_i\in S_c^+}y_i+\sum_{x_i\in S_c^-}(1-y_i)< 1,
+          $$
+          which cannot happen.
+          \item \textbf{Approximation ratio:} For $y_i^*$ in $\mathbf{y}^*$, it is increased by a factor of at most 3. Thus,
+          $$
+          \sum_{i=1}^ny_i\leq 3\cdot \sum_{i=1}^ny_i^*=3OPT_{LP}\leq3OPT_{ILP}
+          $$
+          Note that this is a minimization problem so the result of LP should be no worse than ILP w.r.t the goal.
+        \end{itemize}
+      \end{proof}
+  \end{enumerate}
+\end{solution}
+%    \begin{proof}
+%        Uncomment this block to write your proof.
+%    \end{proof}
+\item
+\color{red}(Bonus)\color{black} Suppose there is a sequence of pearls of different color. Color is denoted as $1-m$ and the total number of pearls is $n$. After you read these information and conduct some pre-processing, you need to face lots of of queries.\par
+A query gives two positions $1\leq l\leq r \leq n$, and ask whether there exists a color, that at least half of pearls in $[l,r]$ is such color.\par
+
+\begin{enumerate}
+\item Design a random algorithm to solve this problem. Space complexity of your algorithm should be strictly better than $O(mn)$. Explain your idea briefly, give time complexity for pre-processing and per query, and give space complexity. Your accuray should be better than 99.9\%. \par
+For example, a naive algorithm just read in all pearls as pre-processing. And naively iterate every color and every postion for query. This case, the pre-processing complexity is $O(n)$. For query, it will execute $(r-l)*m$ times, since $r-l$ can achieve $n-1$, so time complexity per query is $O(mn)$. No extra space needed.\par
+\color{blue}(Hint: Random choose some color and examine.)\color{black}
+
+\begin{solution}
+  I first get a nonrandom algorithm which is simple and should act as a benchmark. The idea is to keep $m$ counters initialized to be 0, one for each color. For pre-processing, fill the sequence into an array, which introduces O($n$) space complexity. When there comes a query, strat traversing from $l$. For each pearl encountered, add 1 to the counter of its color. When traversing finishes at $r$, check the counters to see if there is one counter $\geq \frac{r-l+1}{2}$. The total space complexity is O($m+n$), and so is the time complexity per query.
+
+  This simple idea implies that a meaningful random algorithm for this problem should give a time complexity strictly beter than O($m+n$) per query, which dirves us to use some data structure that can provide us with O($\log n$) searching time. 
+  
+  Inspired by the hint below, we can first establish a Balanced Binary Tree for each color in the preprocessing stage, then for query, randomly pick a color and perform $n_1=$NumSmallerThan($l$) and $n_2=$NumSmallerThan($r$) on its balanced binary tree, then check if $n_2-n_1\geq \frac{r-l+1}{2}$. If so, return true; else pick another color randomly from rest of the colors and repeat, until the procedure returns or all color is tried.
+
+  \begin{minipage}{0.8\textwidth}
+    \centering
+    \begin{algorithm}[H]
+    \caption{Random Algorithm For Query}\label{Alg-query}
+    \KwIn{A sequence of pearls $(p_1,\cdots,p_n$) of different colors $\{c_1,\cdots,c_m\}$, two positions $l$, $r$;}
+    \BlankLine
+    Initialize balanced binary tree for each color $c$\;
+    \ForEach{pearl in the sequence}{
+      insert the position of the pearl into the tree of its color\;
+    }
+    \tcp{Preprocessing finished}
+    \ForEach{color  not considered yet}{
+      Randomly choose one color(tree) $c$ to check\;
+      $n_1\leftarrow\text{NumSmallerThan}_c(l$)\;
+      $n_2\leftarrow\text{NumSmallerThan}_c(r$)\;
+      \If{$n_2-n_1>\frac{r-l+1}{2}$}{
+        \Return{True}\;
+      }
+    }
+      \Return{False}\;
+    \end{algorithm}
+    \end{minipage}
+
+  For complexity, this algorithm requires extra O($n$) space to store every pearl as a vertex of the balanced binary tree. The preprocessing part inserts $n$ vertices in total, so it requires O($n\log n$) time. For each query, in the worst case every binary tree is visited, each with a scale no larger than O($n$), so the worst case time complexity is O($2m\log n$).
+
+  Note that this is a Las Vegas algorithm, every time we get the correct answer, but the time consumed is a random variable. It is possible that we finish this algorithm in first several visits to the balanced binary trees, which cost O($c\log n$) time, where $c$ is a constant.
+\end{solution}
+\item \textbf{Remark:} This question involves a little bit knowledge about online algorithm. The ddl for this lab is 5/27/2019. \par
+Now there are extra operation besides query.\par
+\textbf{Append(c):} Put a pearl with color $c$ at the end of sequence.\par
+\textbf{Erase:} Take out the last pearl.\par
+\textbf{Colouration(p,c):} Choose pearl of postion $p$ and change its color to $c$.\par
+Assume that no operation will involve a new color. You may modify your algorithm and show time complexity for each type of operation( include query).\par  
+\color{blue}(Hint: Consider Balanced Binary Tree. Given an element $e$, they can find whether $e$ exists in tree, and how many elements in tree are smaller than $e$, in $O(logn)$ time.)\color{black}
+\begin{solution}
+  The centural issue for adding these operations might be whether to use another O($n$) space complexity to keep a copy of the current sequence in an dynamic array, to speed up the Colouration opeartion. By introducing this array we can quickly locate which tree the pearl to be coloured is oringinally in. Otherwise, we have to randomly search a tree until we find the desired pearl to remove, which may take O($m\log n$) in the worst case. We shall compare the two implements in detail.
+  \begin{enumerate}
+    \item \textbf{Not introducing dynamic array}
+    \begin{itemize}
+      \item \textbf{Append(c):} To make \textbf{Erase} efficient, we may want to keep a pointer pointing to the leaf vertices of the last pearl in the current sequence. Actually to append a pearl of some color $c$ is easy, we just need to insert a vertex of value $n+1$ to the tree of $c$, which takes O($\log n$), and increase $n$ by one. Then we modify the pointer to give it correct value. These other operations take constant time per appending.
+      \item \textbf{Erase:} With help of the pointer, we can easily locate the pearl to erase, decrease $n$, which takes constant time. But after erasing, we do not know where the current last pearl is. We may have to  search $m$ trees to find the last pearl. Adding a pointer to the last but one pearl is the same result, after erasing we lose information on the current last but one pearl and need to search the trees. Therefore \textbf{Erase} actually takes O($m\log n$) in the worst case as long as we do not intorduce the dynamic array, and on average O($c\log n$).
+      \item \textbf{Colouration(p,c):} As has been analyzed, we need to first locate which tree $p$ is in, which may take O($m\log n$) in the worst case, delete $p$ in that tree, and insert $p$ in the tree of $c$. In all on average it will take O($c\log n$) per colouration.
+      \item \textbf{Query:} For query(including preprocessing) it is exactly the same as before as no new structure is introduced.
+    \end{itemize}
+    \item \textbf{Introducing dynamic array}
+    \begin{itemize}
+      \item \textbf{Append(c):} Besides inserting $n+1$ in the tree of $c$, which takes O($\log n$) time, we also need to insert $c$ into the dynamic to be the new last element. Locating and assigning takes constant time. The problem lies where the dynamic array is full and need to be expanded, this single \textbf{Append} takes O($n$) time. Luckily according to amortized analysis, we know that on average each insert into the dynamic array takes constant time. In all each \textbf{Append} takes O($\log n$) time.
+      \item \textbf{Erase:} With the help of the array this is much more convenient. We get to know which tree the last pearl is in in constant time, and delete the last leaf node of that tree straightly, delete it in the array and decrese $n$. We may also wish to shrink the size of the array if after some \textbf{Erase} the array is $3/4$ empty or whatever ratio occupied. By amortized analysis we know that shrinking on average takes constant time per operation. In all it only takes O($\log n$) time for deleting the leaf node, as other operations take constant time.
+      \item \textbf{Colouration(p,c):} It shares the same convenience with \textbf{Erase} as we can locate which tree $p$ is in in constant time. Delete the oringinal node and insert $p$ into tree of $c$. Each of the two operation takes O($\log n$) time, so in all O($\log n$) time is used per colouration.
+      \item \textbf{Query and Preprocessing:} For preprocessing it introduces extra O($n$) space complexity to keep the array, but in all the total space complexity is still O($m+n$). It also takes O($n$) extra time to fill in $n$ slots of the array, and the total complexity of preprocessing is still O($n\log n$).
+      
+      Since query only involves operations with the balanced binary trees and does no modification to the tree, the time complexity remains the same as in (a), that is, O($m\log n$) in the worst case and O($c\log n$) on average.
+    \end{itemize}
+  \end{enumerate}
+\end{solution}
+\end{enumerate} 
+
+%    \begin{proof}
+%        Uncomment this block to write your proof.
+%    \end{proof}
+
+
+    
+
+\end{enumerate}
+
+\vspace{20pt}
+
+\textbf{Remark:} You need to include your .pdf and .tex files in your uploaded .rar or .zip file.
+
+%========================================================================
+\end{document}

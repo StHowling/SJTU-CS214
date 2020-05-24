@@ -1,0 +1,490 @@
+\documentclass{llncs}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage[ruled,linesnumbered,boxed]{algorithm2e}
+\usepackage{graphicx}
+\usepackage{amsmath}
+%\usepackage{mathtools}
+%\usepackage{color}
+\usepackage{tabularx}
+\usepackage[colorlinks, linkcolor=blue, anchorcolor=blue, citecolor=green]{hyperref}
+%\usepackage{booktabs}
+\usepackage[table]{xcolor}
+%\uespackage{colortbl}
+\usepackage[tight,footnotesize]{subfigure}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{layout}
+%\usepackage{ctex}
+
+%\footskip = 10pt
+\pagestyle{fancy}
+\chead{Group Project}
+\lhead{CS214-Algorithm@SJTU}
+\rhead{Instructor: Xiaofeng Gao}
+\rfoot{}
+\cfoot{Page \thepage \ of \pageref{LastPage}}
+\addtolength{\headheight}{0.5\baselineskip}
+\addtolength{\headwidth}{0\marginparsep}
+\addtolength{\headwidth}{0\marginparwidth}
+
+
+
+\title{Scheduling Model Design of Logistics Service Supply Chain}
+
+
+\author{{Yaoxuan Li \quad517201910672 \quad lyxtracy1@sjtu.edu.cn} \\
+{Tianyao Shi \quad517021910623 \quad sthowling@sjtu.edu.cn} \\
+{Kuangjin Wu \quad517021910732 \quad kuangjin@sjtu.edu.cn}}
+\institute{Department of Computer Science, \\ Shanghai Jiao Tong University, Shanghai, China}
+
+\begin{document}
+\bibliographystyle{splncs}
+
+%\linespread{1.0}
+
+%==============================================================================
+\maketitle
+\begin{abstract}\vspace{-5mm}
+    The implementation of the logistics service supply chain requires good time scheduling. In this paper we mainly analyze whether to consider the relationship between time windows of supplier operation and customer requirement will cause different results. We use discrete values to represent the time range provided by the supplier, find feasible solution and use local search to find a better solution for multi-objective programming. When looking for a better solution, we derive a single objective as the Euclidean distance from the present point to the ideal point and minimize it, which make all of the three objectives have good approximate feasible solutions.
+    
+    Besides, we also analyze the effectiveness and complexity of the algorithm, and use the results obtained by the algorithm to analyze the data and derive the performance of the algorithm. Our algorithm always gives good time scheduling at most of time, so that the three objectives required by the project are as good as possible. In general, our model and algorithm have handled these problems very well and have reached satisfactory conclusions.
+    
+    \textbf{Keywords:} Time scheduling, Logistics service supply chain,  Multi-objective programming, Local search.
+    \end{abstract}
+
+
+    \section{Introduction}
+
+
+    \subsection{Problem Background}
+    With the accelerated pace of life, people's demand for logistics has gradually increased, and the logistics supply chain has emerged in this context. In the logistics service supply chain, main participants include customers, functional logistics service providers and logistics service integrators. As we all know, completion time is an important index of logistics service performance and then the time scheduling problem becomes one of the key problems in logistics service scheduling. As far as is known, many uncertain factors such as weather, traffic conditions and vehicle breakdown will have a certain impact on the logistics supply chain. Therefore, we need to build models and analyze these factors through algorithms to enable the logistics service supply chain to provide more effective services.
+    \subsection{Restatement of the Problem}
+    We need to solve two main problems:
+    
+    \begin{itemize}
+    \item[\textbf{1}] \textbf{Scheduling Model Design without the Relationship between Time Windows of Supplier Operation and Customer Requirement}
+    
+    In this problem, there is a two-echelon logistics service supply chain composed of one logistics service integrator and several functional logistics service providers. A logistics service integrator can receive multiple orders at the same time, and each order consists of many service processes. And each logistics service order consists of multiple service processes, which could be divided into two types, the customization service process and the mass service process. We need to analyse the orders and generate a scheduling scheme so that we can minimize the difference between the total expected service time and customer requirement time, while minimizing the total order operation cost of the logistics service supply chain and maximizing the satisfaction of customers.
+    
+    
+    \item[\textbf{2}] \textbf{Scheduling Model Design with the Relationship between Time Windows of Supplier Operation and Customer Requirement}
+    
+    In this problem, we need to consider the relationship between time windows of supplier operation and customer requirement. Based on this condition, we modify the scheduling model and recalculate the new solution.
+    \end{itemize}
+    \subsection{Our work}
+    \begin{itemize}
+        \item [(1)]At the beginning we assume that the distribution given by the FLSP(Functional Logistics Service Supplier) is continuous, but the problem is too complicated to solve, so we try to simplify the problem and set the given range to discrete. We design a multi-objective programming to solve this problem. The execution time distribution of each process is discrete. We look for a suitable CODP(Customer Order Decoupling Point), traverse each process, find feasible solutions and continuously optimize our feasible solutions during the traversal process until we find a satisfactory solution.
+    
+        \item[(2)]After finding a CODP, we do a local search for the processes in all orders. In this part we design a good algorithm to solve the problem.
+    
+        \item[(3)]When considering the relationship between time windows of supplier operation and customer requirement, we have added new constraints to the planning of the original algorithm. At this time, the difference between the expected service time and the expected operation time will affect the extra operation cost, which is also the impact of considering the new relationship.
+    
+        \item[(4)]After designing the model, we implement it with the corresponding algorithm. At the same time, we analyze the time complexity and efficiency of the algorithm and compare it with the results of the heuristic algorithm we find to see if the result of the algorithm is practical.
+    
+    \end{itemize}
+    
+
+
+
+
+\section{Notations}
+Here we list the symbols and their meanings the are used frequently in our model. Other symbols that are used
+only once will be described later.
+\begin{center}
+\begin{tabular}{c|l}
+\hline
+symbol\hspace{1cm} &\hspace{1cm}description\hspace{4cm}\\ \hline
+LLSC\hspace{1cm} & \hspace{1cm}Logistics Service Supply Chain \hspace{4cm}\\
+LSI\hspace{1cm} & \hspace{1cm}Logistics Service Integrator \hspace{4cm}\\
+FLSP\hspace{1cm} & \hspace{1cm}Functional Logistics Service Supplier \hspace{4cm}\\
+CODP\hspace{1cm} & \hspace{1cm}Customer  Order  Decoupling  Point \hspace{4cm}\\
+k\hspace{1cm} & \hspace{1cm}Value of CODP: before which process all are mass service processes, and from which  \hspace{4cm}\\
+\hspace{1cm} & \hspace{1cm}process on all are customization service processes \hspace{4cm}\\
+$N$\hspace{1cm} & \hspace{1cm}Size of the set of customer orders being scheduled by LSI \hspace{4cm}\\
+$N_j$\hspace{1cm} & \hspace{1cm}Number of processes in the $j$th order\hspace{4cm}\\
+$c_i$\hspace{1cm} & \hspace{1cm}Normal cost per unit time of the $i$th mass service process \hspace{4cm}\\
+$c_{ij}$\hspace{1cm} & \hspace{1cm}Normal cost per unit time of the $i$th customization service process in the $j$th order\hspace{4cm}\\
+$U_i$\hspace{1cm} & \hspace{1cm}Completion  time  of $i$th mass service process as a Uniform Distribution $U_i\sim$ $[a_i,b_i]$ \hspace{4cm}\\
+$U_{ij}$\hspace{1cm} & \hspace{1cm}Completion  time  of $i$th  customization service process in the $j$th order  \hspace{4cm}\\
+\hspace{1cm} & \hspace{1cm}as a Uniform Distribution $U_i\sim$ $[a_{ij},b_{ij}]$ \hspace{4cm}\\
+$t_i$\hspace{1cm} & \hspace{1cm}Actual completion time of $i$th mass service process, $f(t_{i})=\frac{1}{b_i-a_i}$ \hspace{4cm}\\
+$t_{ij}$\hspace{1cm} & \hspace{1cm}Actual completion time of $i$th customization service process in the $j$th order,\hspace{4cm}\\
+\hspace{1cm} & \hspace{1cm}$f(t_{ij})=\frac{1}{b_{ij}-a_{ij}}$ \hspace{4cm}\\
+$T_i$\hspace{1cm} & \hspace{1cm}Expectation of $t_i$, $\mathbb{E}(t_{i})=T_{i}=\frac{a_i+b_i}{2}$ \hspace{4cm}\\
+$T_{ij}$\hspace{1cm} & \hspace{1cm}Expectation of $t_{ij}$, $\mathbb{E}(t_{ij})=T_{ij}=\frac{a_{ij}+b_{ij}}{2}$ \hspace{4cm}\\
+$T_j^r$\hspace{1cm} & \hspace{1cm}Required completion time  of  the $j$th  customer  order \hspace{4cm}\\
+$c_{j1}$\hspace{1cm} & \hspace{1cm}Possible  ahead  of  schedule of the required time $T_j^r$ of the $j$th  customer  order\hspace{4cm}\\
+$c_{j2}$\hspace{1cm} & \hspace{1cm}Possible  postpone of the required time $T_j^r$ of the $j$th  customer  order\hspace{4cm}\\
+$T_{ij}^e$\hspace{1cm} & \hspace{1cm}Expected completion time of $i$th process in $j$th order as a decision variable \hspace{4cm}\\
+\hspace{1cm} & \hspace{1cm}used by LSI \hspace{4cm}\\
+$T_{i}^e$\hspace{1cm} & \hspace{1cm}Expected completion time of $i$th process if process $i$ is selected as a mass \hspace{4cm}\\
+\hspace{1cm} & \hspace{1cm}service process \hspace{4cm}\\
+$L_{i+1}^p$\hspace{1cm} & \hspace{1cm}Upper limit of the time postponed in the $i$th service process\hspace{4cm}\\
+$L_{i+1}^a$\hspace{1cm} & \hspace{1cm}Upper limit of the time head of schedule in the $i$th service process\hspace{4cm}\\
+$S_i$\hspace{1cm} & \hspace{1cm}Satisfaction of the $i$th mass service process  \hspace{4cm}\\
+$S_{ij}$\hspace{1cm} & \hspace{1cm}Satisfaction of the $i$th customization service process in $j$th order \hspace{4cm}\\
+$s_i$\hspace{1cm} & \hspace{1cm}Capability of generating satisfaction of the $i$th mass service process  \hspace{4cm}\\
+$s_{ij}$\hspace{1cm} & \hspace{1cm}Capability of generating satisfaction of the $i$th customization service process  \hspace{4cm}\\
+\hspace{1cm} & \hspace{1cm}in $j$th order \hspace{4cm}\\
+$P_{ij}$\hspace{1cm} & \hspace{1cm}Penalty cost per time unit paid by FLSP to LSI for the difference between $t_{ij}$  \hspace{4cm}\\
+\hspace{1cm} & \hspace{1cm}and $T_{ij}^e$ \hspace{4cm}\\
+$E_{ij}$\hspace{1cm} & \hspace{1cm}Extra cost per time unit paid by  LSI to FLSP when $T_{ij}^e\notin [a_{ij},b_{ij}]$ \hspace{4cm}\\
+$X_1$\hspace{1cm} & \hspace{1cm}Total cost of LSSC as one optimizing objective to be minimized \hspace{4cm}\\
+$X_2$\hspace{1cm} & \hspace{1cm}Time difference between the total expected service time and customer requirement  \hspace{4cm}\\
+\hspace{1cm} & \hspace{1cm}time as one optimizing objective to be minimized\hspace{4cm}\\
+$X_3$\hspace{1cm} & \hspace{1cm}Total satisfaction as one optimizing objective to be maximized\hspace{4cm}\\
+$w_i$\hspace{1cm} & \hspace{1cm}Weight of objective $i$ in the multi-objective programming \hspace{4cm}\\
+$X$\hspace{1cm} & \hspace{1cm}Single objective converted from the multi-objective programming problem using \hspace{4cm}\\
+\hspace{1cm} & \hspace{1cm}Ideal Point Method \hspace{4cm}\\\hline
+\end{tabular}
+\end{center}
+
+
+
+
+\section{Scheduling Model Design without the Relationship between Time Windows of
+Supplier Operation and Customer Requirement}
+\subsection{Assumptions and Definitions}
+In our model that does not consider the relationship between time window of supplier operation and customer requirements, we assume that
+\begin{enumerate}
+    \item \textbf{The service orders consist of serveral service processes that happens strictly in predetermined time order.} That is, a service order $O_j$ may consist of process $1,2,\cdots,N_j$, where $N_j$ is the total number of processes in $O_j$. Process $i$ can start only after process $i-1$ is completely finished. This is determined by the
+    rigid requirement caused by upstream and downstream operations of LSSC (Logistics Service Supplier Chain). 
+    
+    To be specific, assume that the Cai Niao logistics service center in SJTU is to deliver a batch of goods that SJTUers ask it to, to places all over China. The first process is to collect all the goods and target locations from SJTUers. The second process is to pack them so that their destinations are clearly shown on the packet by attaching a bar code to every packet. Then it sends the batch of goods to a larger logistics service scheduling center, where they are decided to which collecting and distributing center on their way to destination they should first go. Before they reach the collecting and distributing center, they can do nothing but follow the scheduled route. And nor can it happen that they are sent to the scheduling center before they are packed.
+
+    By the way we strongly criticize the explanation that these processes can happen out of order in the wechat group, which is misleading and confusing since it is contraditory to the written text in the 6th and 7th data description of Section 2.1 in the Project Description file. Out-of-order arrangement is also not compatible with the real condition in logistics, as we just demonstrated. We take long time trying to explain the contradiction and understand the problem context under this kind of conflict. And this kind of conflict is not alone, see our 3rd and 4th assumption.
+    \item \textbf{The service processes in orders continue one after another without any stagnation.} In other words, process $i$ starts immediately after process $i-1$ finishes. This is also realistic as there is no such stagnation in a real LSSC, everything keeps moving to avoid overstock in any tranporting node. 
+    \item Service processes could be divided into two types, the customization service process and the mass service process.
+    \textbf{Each service process can be selected to be a mass service process or a customization service process By LSI (Logistics Service Integrator)}, rather than letting the customers to explicitly state which processes need be massive and which processes need be customized.
+
+    By making this assumption we further clarify the semantics of customization service process and mass service process. Though the word customization may imply that customers can customize their orders as they wish, in logistics context, the word actually refers to the order-specific processes. That is to say,\emph{a customized process is a process that is not to be integrated with other processes to form a mass process} . To be more specific, consider the Cai Niao example where the goods are to be delivered all over China. Though they have different destinations, they share the first serveral processes as mass processes until they reach the scheduling center, after which they may go to different collecting and distributing centers, as a customized process.
+    \item The customers need not know the details of what processes their orders consist of. They only provide a destination, and the processes generate automatically to the problems's nature. \textbf{The only thing in their requirement is desired completion time of their orders.} 
+    
+    This is also very right in real life: we do not ask a logistics service provider to use Tesla Model S to transport our goods when our goods go from Shanghai to Suzhou, then change to horse before they reach Nanjing. We only specify the destination, and if some order is too slow, we make a call to complain. For this reason we strongly disagree with the explanation in the wechat group that customers need to explicitly state which processes in their order is to be customized. In fact they do not have a clue what a process is.
+    \item \textbf{Each scheduling task performed by LSI aims at only one set of customer orders.} One set of customer orders is the basic unit in scheduling work, once the set has been decided, the new arriving orders cannot insert and must wait for the next set of order. We denote $N$ the size of this set. This is also to make the problem we work on more realistic. 
+    \item \textbf{There exists a CODP in each set of customer orders.} Though the scheduler can select any process in the set of orders to be mass service process or customization service process, it would be better to select a point \emph{before which all processes are mass service processes, and from which on all processes are customization service processes.}
+    
+    This assumption also agrees with the nature of a logistics problem situation, like the Cai Niao problem we mentioned above. And it simplifies the problem greatly. Though ``customized-massive-customized'' would be more common in most logistics problems, we can view the first customized phase together with part of the massive phase to be the reverse of our ``mass-customization'' model here. Then it suffice to use the scheduling method we are to introduce later in this paper to solve both problem situations.
+    \item \textbf{The normal service cost per unit time in mass service is cheaper than that of customization service.} This is intuitive and common sense, but contradictory to the 2nd data description of Section 2.1 in the Project Description file. But if mass service has more expensive unit cost, it is meaningless to use it: the time scheduling capability is weaker compared to customized service, a change in the mass service requirement changes time schedule in all orders to the same extent, while scheduling a customization service process is more flexible. If by scheduling a mass service process LSI can satisfy all orders' time requirements, changing it to a customization service process LSI can also manage to satisfy all orders' time requirements, but not vise versa.
+    
+    To keep this opimization problem meaningful, we decide to violate the project descriptions and assume mass service processes to be cheaper in unit cost. And we synthesize the unit cost of mass service for this project using this principle.
+    \item  \textbf{Each service process is handled by a single FLSP (Functional Logistics Service Supplier).} The LSI we are to play has strong integrating capability, such that it can always find more FLSPs in contract with it to meet the incremented service requirement derived from changing a mass service process into serveral customization service processes. That is to say, \textbf{there is not any capacity constraint in any service process}. In customized phase, serveral FLSPs respectively handles serveral orders, and their work is concurrent. This would be pretty resonable in real life except for special periods like Double Eleven.
+    \item\label{ass-uniform} Each process handled by an FLSP takes some time to complete, and the completion time is a time window. To be specific, \textbf{the completion time of process $i$ is assumed to be a Uniform Distribution $U_i\sim$ $[a_i,b_i]$}. Here we assume that selecting $i$ as a mass or customization service process does not change the distribution, which is diffrent with in Section~\ref{Sec-4.1}. For different FLSPs, their completion time is independent. We denote $t_{ij}$ the actual completion time of process $i$ in the $j$th order, where we have $\mathbb{E}(t_{ij})=T_{ij}=\frac{a_i+b_i}{2}$ and $f(t_{ij})=\frac{1}{b_i-a_i}$. If process $i$ is selected as a mass service, we denote $t_{i}$ the actual completion time it, $\mathbb{E}(t_{i})=T_{i}=\frac{a_i+b_i}{2}$ and $f(t_{i})=\frac{1}{b_i-a_i}$.
+    
+    This assumption is also very true for real life as many uncertain factors including weather, traffic condition and vehicle troubles, possibly lead to difference between actual service time and standard time spending on completing a certain service.
+    \item \textbf{The required completion time of the $j$th customer order is also an acceptable time window which is an interval $[T_j^r-c_{j1},T_j^r+c_{j2}]$.} Here $c_{j1}$, $c_{j2}$ are the possible ahead of schedule and postpone of the required time $T_j$. The absolute time is assumed to start at 0.
+    \item \textbf{The LSI does scheduling by determining the expected completion time $T_{ij}^e$ for the $i$th process in $j$th order.} Here ``expected'' means LSI expects corresponding FLSP to complete service with such a time. There is nothing to do with the expectation of the completion time as a Uniform Distribution. If process $i$ is selected as mass service process, then $\forall j$, $T_{ij}^e=T_i^e$.
+    \item\label{ass-extra} \textbf{Expected completion time $T_{ij}^e$ must fall in the time window of FLSP operation.} That is, $T_{ij}^e\in [a_i,b_i]$ $\forall i,j$. LSI cannot expect FLSPs to do something beyond their capabilities.
+    \item We define \textbf{the time postponed in the $i$th service process}  in $j$th order to be the difference between the expected completion time $T_{ij}^e$ and the expectation of completion time $T_{ij}=\frac{a_i+b_i}{2}$, when $T_{ij}^e>T_{ij}$. Literally, it evaluates the amount of time that LSI expects FLSP to postpone upon normal service time.
+    
+    We then define \textbf{the upper limit of the time postponed in the $i$th service process} that can be endured by $(i+1)$th process by $L_{i+1}^p$. \textbf{We assume that $T_{ij}^e-T_{ij}\leq L_{i+1}^p$ must be satisfied.} 
+    \item We define \textbf{the time ahead of schedule in the $i$th service process} in $j$th order to be the difference between the expectation of completion time $T_{ij}=\frac{a_i+b_i}{2}$ and the expected completion time $T_{ij}^e$, when $T_{ij}^e<T_{ij}$. Literally, it evaluates the amount of time that LSI expects FLSP to be ahead of normal service time.
+    
+    We then define \textbf{the upper limit of the time ahead of schedule in the $i$th service process} that can be endured by $(i+1)$th process by $L_{i+1}^a$. \textbf{We assume that $T_{ij}^e-T_{ij}\geq L_{i+1}^a$ must be satisfied.}
+    \item\label{ass-goal} Once a service process $i$ in $j$th order is finished, it generates a satisfaction $S_{ij}$ or $S_i$ if it is a mass service process. \textbf{Satisfaction could be the highest if the work is arranged in normal service time ($T_{ij}^e=T_{ij}$ or $T_{i}^e=T_{i}$) and could be impaired if the work is assigned with a difference from the normal service time.} And for different processes, they possess different capabilities of generating satisfaction. We denote the capabilities by $s_{ij}$ and $s_i$.
+    
+    In particular, the satisfactions are gernerated according to the following formula:
+    \begin{align*}
+        &S_{i}=\left\{
+        \begin{matrix}
+            &\frac{T_{i}^e}{T_{i}}\cdot s_{i}, \quad T_{i}^e<T_{i},\\
+            &\frac{T_{i}}{T_{i}^e}\cdot s_{i}, \quad T_{i}^e>T_{i},\\
+            &s_{i},\qquad T_{i}^e=T_{i}.
+        \end{matrix}    
+        \right.\\
+        &S_{ij}=\left\{
+        \begin{matrix}
+            &\frac{T_{ij}^e}{T_{ij}}\cdot s_{ij}, \quad T_{ij}^e<T_{ij},\\
+            &\frac{T_{ij}}{T_{ij}^e}\cdot s_{ij}, \quad T_{ij}^e>T_{ij},\\
+            &s_{ij},\qquad T_{ij}^e=T_{ij}.
+        \end{matrix}    
+        \right.
+    \end{align*}
+     
+    \item If in practice the actual completion time of process $i$ in the $j$th order, $t_{ij}$ is different from the completion time $T_{ij}^e$ expected by  LSI, FLSP needs to pay LSI with penalty cost $P_{ij}$ per time unit.
+    \item \textbf{The goal of this scheduling problem is to minimize the total cost, minimize the time difference between the total expected service time and customer requirement time, and maximize the total satisfaction.} Each of the goal has weight $w_i$ correspondingly.
+\end{enumerate}
+\subsection{Problem formulation}
+From Assumption~\ref{ass-goal} we define the problem clearly as a multi-objective programming problem. Now we give mathemetical description of each goal and the constraints of this problem.
+\begin{enumerate}
+    \item Minimizing the total cost $X_1$
+    
+    Here since we have constrained $T_{ij}^e\in[a_i,b_i]$ in Assumption~\ref{ass-extra}, the extra cost is not generated. The total cost consists of two parts: the total normal service cost paid by LSI to FLSPs, and the total penalty cost paid by FLSPs to LSI, which is viewed as a negative value since concpetually they offset each other. Then we have:
+    \begin{align}\label{goal-1}
+        \text{Min} \quad X_1=\sum_{i=1}^{k-1}\int_{a_i}^{b_i}(c_i\cdot t_i-|t_i-T_i^e|\cdot P_i)f(t_i)dt_i+\sum_{j=1}^N\sum_{i=k}^{N_j}\int_{a_i}^{b_i}(c_{ij}\cdot t_{ij}-|t_{ij}-T_{ij}^e|\cdot P_{ij})f(t_{ij})dt_{ij}
+    \end{align}
+    Here $c_i$ refers to the normal cost per unit time of the $i$th mass service process, $c_{ij}$ refers to the normal cost per unit time of the $i$th customization service process in the $j$th order, and $k$ is the value of CODP.
+    \item Minimizing the total time difference $X_2$
+    
+    This is an easy one to derive with our sufficient assumptions and definitions:
+    \begin{align}\label{goal-2}
+        \text{Min} \quad X_2=\sum_{j=1}^N\left|\sum_{i=1}^{k-1}T_i^e+\sum_{i=k}^{N_j}T_{ij}^e-T_j^r\right|
+    \end{align}
+    \item Maximizing the total satisfaction $X_3$
+    
+    This is to evaluate te average level of satisfaction. We have to be very careful because the mass service process is handled by a single FLSP and is seen a single process. Therefore the quantity of mass service processes and customization service processes are very different. We have
+    \begin{align}\label{goal-3}
+        \text{Max}\quad X_3=\frac{\sum_{i=1}^{k-1}S_i+\sum_{j=1}^{N}\sum_{i=k}^{N_j}S_{ij}}{k-1+\sum_{j=1}^N(N_j-k+1)}
+    \end{align}
+     \item Constraints
+     
+     Equations \eqref{goal-1}, \eqref{goal-2} and \eqref{goal-3} are subject to the following constraints:
+     \begin{align}
+        \left\{
+        \begin{matrix}
+            &T_j^r-c_{j1}\leq\sum\limits_{i=1}\limits^{k-1}T_i^e+\sum\limits_{i=k}\limits^{N_j}T_{ij}^e\leq T_j^r+c_{j2} &\quad\forall j,\;\forall 1\leq k\leq N_j\\
+            &L_{i+1}^a\leq T_{ij}^e-T_{ij}\leq L_{i+1}^p &\quad \forall i,j\\
+            &T_i^e\in [a_i,b_i] &\quad\forall i<k\\
+            &T_{ij}^e\in [a_i,b_i] &\quad \forall i\geq k,\forall j
+        \end{matrix}    
+        \right.
+    \end{align}
+\end{enumerate}
+Now we have formulated the the problem formally as a multi-objective programming. To solve a multi-objective programming problem, we have to synthesize the three goals to convert the multi-objective problem into a single-objective one. 
+
+To do the converting we adpot the idea of \emph{Ideal Point Method.} That is, we set up an ideal solution point, where the values of three objective functions are respectively their optimal values ${X_1}_{\min}$, ${X_2}_{\min}$ and ${X_3}_{\max}$ when configured that one of them is the only objective of the programming. Then we derive the single objective $X$ as the Euclidean distance from the present point to the ideal point to minimize:
+\begin{align}\label{constraint}
+    \text{Min}\quad X=\sqrt{w_1\cdot(1-\frac{{X_1}_{\min}}{X_1})^2+w_2\cdot(1-\frac{{X_2}_{\min}}{X_2})^2+w_3\cdot(1-\frac{{X_3}}{{X_3}_{\max}})^2}
+\end{align}
+But still this programming is not an LP (Linear Programming) nor ILP (Integer Programming). The constraints of programming are linear, yet the objective function is non-linear. And it is easy to see that it is impossible to convert the problem into LP, since the Uniform Distribution involves calculating expectations, which is an integral.
+\subsection{Problem Analysis and Algorithm Design}
+So far we have successfully formulated the original vague and ambiguous descriptions into a clear and well-defined optimizing programming problem. And we claim this problem to be in NP class.
+
+\textbf{Proof of claim.} The set of decision variables $T_{ij}^e$ and a value $k$ of CODP act as a certifier of this problem. And the certificate is to compute the values in Equation~/eqref{constraint} and check whether the constraints are satisfied. These are all summations and comparisons that can be done in linear time. Therefore the certifer is polynomial time. According to the definition of NP class, this problem is in NP.
+
+But as we can see, due to the nature of this problem, this is a complex programming problem. What we have learned in course mainly focus on LP and ILP, but does not give us a clue on how to solve complex programming problems. We viewed many literature online and find most algorithms solving multi-objective programming to be heuristic algorithms, which does not guarantee the quality of solutions obtained. It is hard to design a non-heuristic algorithm to solve problem of this difficulty level efficiently. The only option seems to be submitting the problem constraints and objective to optimizers like CPLEX and hoping its inner opimizing algorithms will work.
+
+To deal with this obstacle, we choose to step a little backward by modifying one of our assumptions, Assumption~\ref{ass-uniform} :
+\begin{enumerate}
+    \item[9.] Each process handled by an FLSP takes some time to complete, and the completion time is a time window. To be specific, \textbf{the completion time of process $i$ is assumed to be a Dicrete Random Distribution $\left\{a_i,a_i+1,\cdots,b_i-1,b_i\right\}$. The completion time equally likely equals to all possible values.} Here we assume that selecting $i$ as a mass or customization service process does not change the distribution, which is diffrent with in Section~\ref{Sec-4.1}. For different FLSPs, their completion time is independent. We denote $t_{ij}$ the actual completion time of process $i$ in the $j$th order, where we have Pr$[t_{ij}=x]=\frac{1}{b_i-a_i+1}$, $x\in\mathbb{Z}$, $a_i<x<b_i$. And we have $\mathbb{E}(t_{ij})=T_{ij}=\frac{a_i+b_i}{2}$. If process $i$ is selected as a mass service, we denote $t_{i}$ the actual completion time it, Pr$[t_{i}=x]=\frac{1}{b_i-a_i+1}$, $\mathbb{E}(t_{i})=T_{i}=\frac{a_i+b_i}{2}$.
+\end{enumerate}
+By adopting this modification we are not simplifying the problem\textemdash intuitively discrete version of a problem is no simpler than the continuous version, like ILP to LP. This is because we have no idea how to optimize continuous conditions. Actually we have not learned the content of Simplex or Kramarkar's Algorithm either, we only tried to use CPLEX to solve problems back then. But with discrete, integer-value problems, we are able to take advantage of \textbf{Local Search} and try designing our own method.
+
+Before we demonstrate how we implement Local Search, we first modify the first objective to adapt to the modification in assumptions. The new total cost $X_1$ takes shape
+\begin{align}\label{goal-new}
+    \text{Min} \quad X_1=\sum_{i=1}^{k-1}\sum_{x=a_i}^{b_i}(c_i\cdot t_i-|t_i-T_i^e|\cdot P_i)\text{Pr}[t_i=x]+\sum_{j=1}^N\sum_{i=k}^{N_j}\sum_{x=a_i}^{b_i}(c_{ij}\cdot t_{ij}-|t_{ij}-T_{ij}^e|\cdot P_{ij})\text{Pr}[t_{ij}=x]
+\end{align}
+Then we define the \textbf{neighborhood} $\mathcal{N}$ of a current solution $S=(T^e,k)$, where 
+\begin{align}
+    &\qquad\qquad T^e=\left\{T_1^e,\cdots,T_{k-1}^e,T_{k1}^e,\cdots,T_{N_NN}\right\},\\
+    \mathcal{N}(S)&=\left\{S'=(T^{e'},k)\;\bigg|\;\exists i,j:T^{e'}\setminus T^e=T_i^e\pm1\;\;or\;\;T_{ij}^e\pm1
+    \right\}
+\end{align}
+Then in Algorithm~\ref{alg:local} we give our approximate scheduling algorithm by doing local search on $\mathcal{N}(S)$.
+\begin{minipage}{\textwidth}
+    \centering
+    \begin{algorithm}[H]
+    \caption{Local Scheduling}\label{alg:local}
+    \KwIn{$N$, the set of all $N_j$, the set of all $T_j^r,c_{j1},c_{j2}$;}
+    \KwOut{A solution $S=(T^e,k)$;}
+    \BlankLine
+    $S_{\min}\leftarrow$ MAX\;
+    \For(\qquad// iterate over all CODP value){$k\leftarrow1$ to $\min N_j$}{
+    \ForEach{$i,j$}{$T_{ij}^e\leftarrow\max\left\{L_{i+1}^a+T_{ij},a_i\right\}$\tcp*[r]{initialize the solution, start from where the latter 3 constraints are satisfied}}
+    \ForEach{$S'\in\mathcal{N}(S)$}{
+        \If{$S$ satisfies all constraints}{
+            break\tcp*[r]{feasible solution found, now start optimizing}}
+        \If{$X_2(S')<X_2(S)$ and $S'$ satisfies the latter 3 constraints}{$S\leftarrow S'$\tcp*[r]{move to more feasible solutions}}
+    }
+    \eIf{$S$ does not satisfies all constraints and $k=1$}{
+        \Return{``No feasible solution''}\tcp*[r]{tells if the instance does not have s feasible solution}}{\Return{$S_{\min}$}\tcp*[r]{larger $k$ cannot have a feasible solution}}
+    \ForEach{$S'\in\mathcal{N}(S)$}{
+        \If{$X(S')<X(S)$}{$S\leftarrow S'$\;}
+    }
+    \If{$X(S)<X(S_{\min})$}{$S_{\min}\leftarrow S$}
+    }
+    \Return{$S_{\min}$};
+    \end{algorithm}
+    \end{minipage}
+\subsection{Theoretical Analysis and Performance Evaluation}
+\subsubsection{Theoretical Analysis}
+\begin{itemize}
+    \item \textbf{Time Complexity}
+    
+    For each $k$, our algorithm does two things:\begin{enumerate}
+        \item setting up a solution that is close to be a feasible one, and move to more feasible ones in its neighborhood, until we find a feasible solution. Or in the end there is no `more feasible' solutions in the neighborhood, then we can tell that the problem instance does not have a feasible solution. The initializing part costs O($N\cdot\max{N_j}$), and while moving, with each iteration $X_2(S)$ decreases at least 1. Let us denote $l$ to de the largest length of the completion time window, then it at most moves O($N\cdot\max{N_j}\cdot l$) times, with each move it compares with at most O($2N\cdot\max{N_j}$) solutions in its neighbor, with each compare costing O($N\cdot\max{N_j}$) time to compute $X_2(S')$. So moving costs O($N^3\cdot\max{N_j}^3$). If we treat the total number of processes of all orders as the input $n$, then finding a feasible solution costs O($n^3+n$)=O($n^3$).
+        \item moving towards solutions in its neighbors that has smaller value of $X$. Consider the ideal point in $\mathbb{R}^3$: $({X_1}_{\min},{X_2}_{\min},{X_3}_{\max})$, and spot a point representing feasible solution in the space to form an imaginary cubiod. Then moving towards the ideal point draws out a 3-D path. The length of the cubiod is O($\max c_{ij}\cdot\max b_i\cdot n$), the width is O($l\cdot n$), and the height is O($l\cdot n$) as well since for a certain $k$ the denominator of the expression of $X_3$ is constant, and the smaller the difference is between all $T_{ij}^e$ and $T_{ij}$, the bigger the satisfaction is. Since we follow the rule that $X$ always decreases while moving, the length of path is at most 2-dimensional product of the cuboid's parameter, that is at most O($c^2\cdot n^2$) moves, where c is a constant like $l$. And in each move it compares with at most O($2n$) solutions in its neighbor, with each compare costing O($3n$) to compute $X(S')$. So the optimizing process costs O($6c^2\cdot n^4$).
+    \end{enumerate} 
+    And the outermost loop iterates at most $N$ times which is O($\sqrt{n}$). In conclusion the time complexity of Local Scheduling is O($c^2n^\frac{9}{2}$), which is in polynomial time w.r.t. input size.
+    \item \textbf{Feasibility}
+    
+    We claim that if for a instance of this problem there exists a feasible solution, then our algorithm can always find it; if there does not exist a feasible solution, then our algorithm will return ``no feasible solution''.
+    
+    \textbf{Proof of claim.} 
+    \begin{enumerate}
+        \item First half.
+        
+        Suppose not. Then the feasible solution must have smaller $X_2$ than that of the current solution, since we can easily see that $X_2$ and the first constraint decribles exactly the same thing. In that case according to our algorithm, we would move to the feasible solution.
+        \item Second half.
+        
+        Suppose not. That is, for a instance of this problem there does not exist a feasible solution, but our algorithm returns one solution but not ``no feasible solution''. This is impossible as all solution will fail when judging whether the 4 constraints are satisfied, then the ``no feasible solution'' must be triggered.\qed
+    \end{enumerate}
+    
+\end{itemize}
+\subsubsection{Performance Evaluation}
+Though it is hard to derive an approximation ratio, we can compare our algorithm's result with that of other widely-used, good-in-practice heuristic algorithm to see how good our algorithm is. Here we choose \textbf{genetic algorithm} as the benchmark, and assuming the result it provides to be optimal.
+\section{Scheduling Model Design with the Relationship between Time Windows of Supplier
+    Operation and Customer Requirement}
+    \subsection{Model Modification}\label{Sec-4.1}
+    We will add new assumptions to the model.
+    \begin{itemize}
+        \item[1.]
+        \textbf{The customization service has a new uniform distribution $U_i\sim(a_{ij},b_{ij})$.} When we design the scheduling model without considering the relationship between time windows of supplier operation and customer requirement, we assume that mass service's completion time set for a service process of FLSP obeys uniform distribution $U_i\sim(a_i,b_i)$. After considering the relationship between time windows of supplier operation and customer requirement, since the time windows and customer requirement time provided by FLSP will affect each other, we set the customization service obeys a new uniform distribution $U_i\sim(a_{ij},b_{ij})$. Then their relationship is expressed by setting a different uniform distribution between the mass service and the customization service.
+        \item[2.]
+        \textbf{We add an extra cost based on the original cost.} Because when we don't consider the relationship between time windows of supplier operation and customer requirement, each service has a uniform distribution $U_i\sim(a_i,b_i)$, so the original cost has no extra cost. After we consider their relationship, the time schedule given by LSI may exceed the distribution range provided by FLSP, so LSI must pay extra cost per unit time which out of range.
+    \end{itemize}
+    After adding the above assumptions, we combine the previously established models to re-analyze the problem taking into account the relationship between time windows of supplier operation and customer requirement.
+
+    \subsection{Problem Formulation}
+    After modifying the model, we will re-improve this multi-objective programming problem:
+    \begin{enumerate}
+    \item Minimizing the total cost $X_1$
+
+    We add an extra cost to the customization service in $X_1$ and change its distribution from $(a_i,b_i)$ to $(a_{ij},b_{ij})$. The total extra cost paid by LSI to FLSPs, which as compensation beyond the given distribution range of the FLSPs.
+
+    If $T_{ij}^e<a_{ij}$, we have:
+    \begin{equation}
+    \begin{aligned}\label{goal-6}
+        \text{Min} \quad X_1&=\sum_{i=1}^{k-1}\int_{a_i}^{b_i}(c_i\cdot t_i-|t_i-T_i^e|\cdot P_i)f(t_i)dt_i\\&+\sum_{j=1}^N\sum_{i=k}^{N_j}\int_{a_{ij}}^{b_{ij}}(c_{ij}\cdot t_{ij}+(T_{ij}-T_{ij}^e)\cdot E_{ij}-|t_{ij}-T_{ij}^e|\cdot P_{ij})f(t_{ij})dt_{ij}
+    \end{aligned}
+    \end{equation}
+    If $T_{ij}^e>b_{ij}$, we have
+    \begin{equation}
+    \begin{aligned}\label{goal-7}
+        \text{Min} \quad X_1&=\sum_{i=1}^{k-1}\int_{a_i}^{b_i}(c_i\cdot t_i-|t_i-T_i^e|\cdot P_i)f(t_i)dt_i\\&+\sum_{j=1}^N\sum_{i=k}^{N_j}\int_{a_{ij}}^{b_{ij}}(c_{ij}\cdot t_{ij}+(T_{ij}^e-T_{ij})\cdot E_{ij}-|t_{ij}-T_{ij}^e|\cdot P_{ij})f(t_{ij})dt_{ij}
+    \end{aligned}
+    \end{equation}
+    If $a_{ij}\leq T_{ij}^e\leq b_{ij}$, we have
+    \begin{equation}
+    \begin{aligned}\label{goal-8}
+        \text{Min} \quad X_1=\sum_{i=1}^{k-1}\int_{a_i}^{b_i}(c_i\cdot t_i-|t_i-T_i^e|\cdot P_i)f(t_i)dt_i+\sum_{j=1}^N\sum_{i=k}^{N_j}\int_{a_{ij}}^{b_{ij}}(c_{ij}\cdot t_{ij}-|t_{ij}-T_{ij}^e|\cdot P_{ij})f(t_{ij})dt_{ij}
+    \end{aligned}
+    \end{equation}
+
+    \item Minimizing the total time difference $X_2$
+
+    This part is the same as the above definition, we don't need to change it.
+    \begin{align}\label{goal-9}
+        \text{Min} \quad X_2=\sum_{j=1}^N\left|\sum_{i=1}^{k-1}T_i^e+\sum_{i=k}^{N_j}T_{ij}^e-T_j^r\right|
+    \end{align}
+
+    \item Maximizing the total satisfaction $X_3$
+
+    Since we calculate the satisfaction after finding the corresponding time scheduling, the definition of this value will not change.
+    \begin{align}\label{goal-10}
+        \text{Max}\quad X_3=\frac{\sum_{i=1}^{k-1}S_i+\sum_{j=1}^{N}\sum_{i=k}^{N_j}S_{ij}}{k-1+\sum_{j=1}^N(N_j-k+1)}
+    \end{align}
+
+    \item Constraints
+
+    Equations \eqref{goal-6} to \eqref{goal-10} are subject to the following constraints:
+    \begin{align}
+       \left\{
+       \begin{matrix}
+           &T_j^r-c_{j1}\leq\sum\limits_{i=1}\limits^{k-1}T_i^e+\sum\limits_{i=k}\limits^{N_j}T_{ij}^e\leq T_j^r+c_{j2} &\quad\forall j\\
+           &L_{i+1}^a\leq T_{ij}^e-T_{ij}\leq L_{i+1}^p &\quad \forall i,j
+       \end{matrix}
+       \right.
+    \end{align}
+    Since we now consider the extra cost, the constraints no longer limit the range of $T_i^e$ and $T_{ij}^e$.
+
+    Now we have formed a new multi-objective programming. The same reason, we have to synthesize the three goals to convert the multi-objective problem into a single-objective one. Here we use the same method as before, we derive the single objective $X$ as the Euclidean distance from the present point to the ideal point to minimize:
+
+    \begin{align}
+        \text{Min}\quad X=\sqrt{w_1\cdot(1-\frac{{X_1}_{\min}}{X_1})^2+w_2\cdot(1-\frac{{X_2}_{\min}}{X_2})^2+w_3\cdot(1-\frac{{X_3}}{{X_3}_{\max}})^2}
+    \end{align}
+    \end{enumerate}
+\subsection{Problem Analysis and Algorithm Design}
+In the previous problem we came to the conclusion that it is difficult to calculate a feasible solution with a continuous distribution, so we use discrete values. Similarly, after considering the relationship between Time Windows of Supplier Operation and Customer Requirement, we still use discrete values to calculate feasible solution. Since the algorithm we designed can adapt to the distribution of different completion times, we only need to modify some distribution values on the original algorithm to recalculate the feasible solution.
+
+After we improve the model, the algorithm also modify the distribution of the input and reduce some constraints. Since our algorithm adapts to different distributions, modifying the distribution does not cause a change in computation time, and reducing the constraint only reduces the condition of the judgment. The overall computational complexity does not change much, so the algorithm can still be obtained in polynomial time. As a result, this problem can still be designed as an NP problem.
+
+Obviously, the pseudo code we designed when we don't consider the relationship between Time Windows of Supplier Operation and Customer Requirement can be used in this problem. We only need to change the input of some distributions and some constraints. The overall idea of the algorithm does not change much, so there is no need to redesign the pseudo code.
+\subsection{Theoretical Analysis and Performance Evaluation}
+\subsubsection{Theoretical Analysis}
+\subsubsection{Performance Evaluation}
+
+
+\section{Strength and Weakness}
+\subsection{Strength}
+\begin{itemize}
+    \item[(1)]
+    The model we design considers many uncertain factors, and it can be suitable to most of the FLSPs’ operation time and customer requirement time.
+
+    \item[(2)]
+    We have simplified the problem and correctly clarified the relationship between the various factors, so the results we get are simple and effective.
+
+    \item[(3)]
+    Our algorithm can solve the detection problem in polynomial time, so it is no matter if your input size is large or small.
+
+    \item[(4)]
+    We perform a sensitivity analysis on the model and obtain good results. The data derived from the model is highly similar to the given data.
+
+\end{itemize}
+\subsection{Weakness}
+\begin{itemize}
+    \item[(1)]
+    Our algorithm gets a good feasible solution, not an optimal solution!
+
+    \item[(2)]
+    Our model considers the expectations given by functional logistics service providers, so the results may differ from the actual time given.
+
+    \item[(3)]
+    The algorithm we designed can only support a fixed number of customer orders arrived at the same time. When the number of orders changes, we need to find a new time schedule.
+
+    \item[(4)]
+    For a small amount of special data, the algorithm may not get good results due to the simplification of the model.
+
+\end{itemize}
+\subsection{Future Work}
+\begin{itemize}
+    \item[(1)]
+    Given the realities, we need to improve the algorithm to make timely adjustments to different numbers of customer orders and to handle multiple orders for one customer.
+
+    \item[(2)]
+    Although our algorithm is polynomial time, it does not run very fast on large data inputs. Maybe we can reduce its time complexity by improving some parts of the algorithm and enable it to adapt to more complex data.
+
+\end{itemize}
+\section{Conclusion}
+In order to obtain a better approximate solution, we turn the continuous problem into discrete. We use the traversal method and use local search to obtain the result. The obtained solution has a high similarity with the example given by the problem. In addition, our algorithm is generally completed in polynomial time. It is convenient to get the results when calculating the problem given by the project, and it has good processing time for different input sizes.
+
+Regardless of whether or not to consider the relationship between Time Windows of Supplier Operation and Customer Requirement, the model we design can analyze problems effectively and get the right results. It may not achieve optimality on all three goals, but try to make each target close to its optimal solution.
+
+All in all, we have designed a good time scheduling for the orders given by our customers to meet the various needs as much as possible, and the results of our model confirm this.
+
+\section*{Acknowledgement}
+
+First of all, I would like to thank some of the students for their suggestions and the assistants' explanation of the problem. When we did this project, our team encountered a lot of trouble in understanding the problem. We feel that the problem is somewhat vague and even contradictory in the definition of some concepts. For these reasons, We have explored it for a long time.
+
+Of course, we have learned a lot of useful knowledge through the analysis of this problem. In the process of solving the problem, we have a deeper understanding of the multi-objective programming problem. In general, this is a difficult but meaningful project.
+
+%
+% ---- Bibliography ----
+%
+% BibTeX users should specify bibliography style 'splncs04'.
+% References will then be sorted and formatted in the correct style.
+%
+% \bibliographystyle{splncs04}
+% \bibliography{mybibliography}
+%
+\begin{thebibliography}{8}
+\bibitem{ref_article1}
+Weihua Liu, Xuan Zhao, and Runze Wu: \textbf{Revenue-Sharing Contract Models for Logistics Service Supply Chains with Mass Customization Service}. Hindawi Publishing Corporation, Mathematical Problems in Engineering. Volume 2015, Article ID 572624, 21 pages.
+
+\bibitem{ref_article2}
+Weihua Liu, Yi Yang, Haitao Xu, Xiaoyan Liu, Yijia Wang, and Zhicheng Liang: \textbf{A Time Scheduling Model of Logistics Service Supply Chain Based on the Customer Order Decoupling Point: A Perspective from the Constant Service Operation Time}. Hindawi Publishing Corporation, The Scientific World Journal. Volume 2014, Article ID 756178, 22 pages.
+
+\bibitem{ref_article3}
+Weihua Liu, Yi Yang, Shuqing Wang, and Enze Bai: \textbf{A scheduling model of logistics service supply chain based on the time windows of the FLSP's operation and customer requirement}. Published online: 28 January 2015.
+
+\bibitem{ref_article4}
+Wang, Y., \&Lin, Jie. (2008). \textbf{Supply chain model based on multi-CODP in mass dynamic customization}. International Conference on Information Management, Innovation Management and Industrial Engineering, 2,252-255.
+
+\bibitem{ref_article5}
+E. Selvarajah and G. Steiner. \textbf{Approximation algorithm for the supplier's supply chain scheduling problem to minimize delivery and inventory holding costs}. Operations Research, vol. 57, no. 2, pp. 426-438, 2009.
+
+\bibitem{ref_article6}
+W. H. Liu, X. C. Xu, Z. X. Ren, and Y. Peng. \textbf{An emergency order allocation model based on multi-provider in two-echelon logistics service supply chain}. Supply Chain Management, vol. 16, no. 6, pp. 391-400, 2011.
+\end{thebibliography}
+\end{document}

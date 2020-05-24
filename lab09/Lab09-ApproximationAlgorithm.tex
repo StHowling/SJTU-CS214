@@ -1,0 +1,165 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage{ctex}
+\usepackage{amsmath,amscd,amsbsy,amssymb,latexsym,url,bm,amsthm}
+\usepackage{epsfig,graphicx,subfigure}
+\usepackage{enumitem,balance}
+\usepackage{wrapfig}
+\usepackage{mathrsfs,euscript}
+\usepackage[usenames]{xcolor}
+\usepackage{hyperref}
+\usepackage[vlined,ruled,linesnumbered]{algorithm2e}
+\usepackage{array}
+\hypersetup{colorlinks=true,linkcolor=black}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{exercise}{Exercise}
+\newtheorem*{solution}{Solution}
+\newtheorem{definition}{Definition}
+\theoremstyle{definition}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+\newcommand{\postscript}[2]
+ {\setlength{\epsfxsize}{#2\hsize}
+  \centerline{\epsfbox{#1}}}
+
+\renewcommand{\baselinestretch}{1.0}
+
+\setlength{\oddsidemargin}{-0.365in}
+\setlength{\evensidemargin}{-0.365in}
+\setlength{\topmargin}{-0.3in}
+\setlength{\headheight}{0in}
+\setlength{\headsep}{0in}
+\setlength{\textheight}{10.1in}
+\setlength{\textwidth}{7in}
+\makeatletter \renewenvironment{proof}[1][Proof] {\par\pushQED{\qed}\normalfont\topsep6\p@\@plus6\p@\relax\trivlist\item[\hskip\labelsep\bfseries#1\@addpunct{.}]\ignorespaces}{\popQED\endtrivlist\@endpefalse} \makeatother
+\makeatletter
+\renewenvironment{solution}[1][Solution] {\par\pushQED{\qed}\normalfont\topsep6\p@\@plus6\p@\relax\trivlist\item[\hskip\labelsep\bfseries#1\@addpunct{.}]\ignorespaces}{\popQED\endtrivlist\@endpefalse} \makeatother
+
+\begin{document}
+\noindent
+
+%========================================================================
+\noindent\framebox[\linewidth]{\shortstack[c]{
+\Large{\textbf{Lab09-Approximation Algorithm}}\vspace{1mm}\\
+CS214-Algorithm and Complexity, Xiaofeng Gao, Spring 2019.}}
+\begin{center}
+\footnotesize{\color{red}$*$ If there is any problem, please contact TA Jiahao Fan.}
+
+% Please write down your name, student id and email.
+\footnotesize{\color{blue}$*$ Name:{\textcolor{black}{Tianyao Shi}}  \quad Student ID:{\textcolor{black}{517021910623}} \quad Email: {\textcolor{black}{sthowling@sjtu.edu.cn}}}
+\end{center}
+
+\begin{enumerate}
+    \item
+    \textbf{Metric $k$-center:} Let $G = (V, E)$ be an complete undirected graph with nonnegative edge costs satisfying the triangle inequality, and $k$ be a positive integer. For any set $S \subseteq V$ and vertex $v \in V$, define $cost(v,S)$ to be the cost of the cheapest edge from $v$ to a vertex in $S$ ($cost(v, S) = 0$ if $v \in S$). The problem is to find a set $S \subseteq V$, with $|S| = k$, so as to minimize $\max_v\{cost(v, S)\}$.
+
+    \begin{enumerate}
+        \item
+        Design a greedy approximation algorithm (in the form of pseudo code) with approximation ratio $2$ for this problem.
+
+        (Basic idea: start with an arbitrary center, and in each round, add the `farthest' vertex to the center set until there are totaly $k$ centers)
+
+        \item
+        Prove that your greedy algorithm achieves an approximation ratio of 2 for the metric $k$-center problem. (Hint: prove by contradiction and use the triangle inequality.)
+    \end{enumerate}
+    \begin{solution}
+        \begin{enumerate}
+            \item  See Algorithm~\ref{alg:metric}.\newline 
+            \begin{minipage}{0.8\textwidth}
+                \centering
+                \begin{algorithm}[H]
+                \caption{Greedy Approximation Algorithm for Metric $k$-center}\label{alg:metric}
+                \KwIn{Graph $G=(V, E)$ with non-negative edge weights$c(e),e\in E$, an integer $k$;}
+                \KwOut{Subset $S$ of $V$ with $|S|=k$;}
+                \BlankLine
+                $S\leftarrow\emptyset$\;
+                \ForEach{$v\in V$}{$cost(v,S)=\infty$\;}
+                Choose a vertex $v_1\in V$ randomly and add it to $S$\;
+                \For{$i\leftarrow 1$ to $k-1$} {
+                    $farthestdis\leftarrow0$\;
+                    \ForEach{$v\in V-S$} {
+                        \ForEach{$u\in S$}{
+                        $cost(v,S)\leftarrow\min\{cost(v,S),c(u,v)\}$\;}
+                        \If{$cost(v,S)>farthestdis$} {
+                            $farthestdis\leftarrow cost(v,S)$\;
+                            $farthestver\leftarrow v$\;
+                        }   
+                    }
+                    $S\leftarrow S\cup \{farthestver\}$\;
+                }
+                \Return{$S$};
+                \end{algorithm}
+                \end{minipage}
+                \item 
+        \end{enumerate}
+    \end{solution}
+    \item
+    Let $G = (V, E)$ be a complete undirected graph with nonnegative edge costs satisfying the triangle inequality, and its vertices are partitioned into two sets, $R$ and $S$. The goal is to find a minimum cost tree in $G$ that contains $R$ and any subset of $S$. Obviously, a minimum spanning tree (MST) on $R$ is a feasible solution. Prove that finding an MST on $R$ achieves an approximation ratio of 2 for this problem.
+
+    \item
+    \textbf{Minimum Weighted Vertex Cover:} Consider the weighted version of the Minimum Vertex Cover problem in which a non-negative weight $c_i$ is associated with each vertex $v_i$ and we look for a vertex cover having minimum total weight.
+
+    \begin{enumerate}
+        \item
+        Given a weighted graph $G=(V, E)$ with a non-negative weight $c_i$ associated with each vertex $v_i$, please formulate the Minimum Weighted Vertex Cover problem as an integer linear program.
+
+        \item
+        Prove that the following algorithm finds a feasible solution of the Minimum Weighted Vertex Cover problem with value $m_{LP}(G)$ such that $m_{LP}(G)/m^*(G) \leq 2$.
+
+        \begin{minipage}{0.8\textwidth}
+        \centering
+        \begin{algorithm}[H]
+        \caption{Rounding Weighted Vertex Cover}
+        \KwIn{Graph $G=(V, E)$ with non-negative vertex weights;}
+        \KwOut{Vertex cover $V'$ of $G$;}
+        \BlankLine
+        Let $ILP_{VC}$ be the integer linear programming formulation of the problem\;
+        Let $LP_{VC}$ be the problem obtained from $ILP_{VC}$ by LP-relaxation\;
+        Let $x^*(G)$ be the optimal solution for $LP_{VC}$\;
+        $V' \leftarrow \{v_i \ | \ x_i^*(G) \geq 0.5\}$\;
+        \Return{$V'$};
+        \end{algorithm}
+        \end{minipage}
+
+    \end{enumerate}
+
+    \item
+    Give the corresponding $(I,sol,m,goal)$ for \textbf{Metric $k$-center} and \textbf{Minimum Weighted Vertex Cover} respectively.
+    \begin{solution}
+        \begin{enumerate}
+            \item \textbf{Metric $k$-center}
+            \begin{itemize}
+                \item \emph{Instance}: A complete undirected graph $G=(V,E)$, a cost function $c:E\rightarrow\mathbb{R}^+\cup\{0\}$ and a positive integer $k$.
+                \item \emph{Solution}: A subset $S\subseteq V$ with $|S|=k$.
+                \item \emph{Measure}: A cost function for $S$ and any vertex $v\in V$: \begin{align*}
+                    cost(v,S)=\left\{\begin{matrix}
+                        \min\{c(v,u)\ | \ u\in S\},\quad &v\notin S\\
+                        0, &v\in S
+                    \end{matrix}\right.
+                \end{align*}
+                And we measure a solution by $\max\{cost(v,S)\}$ for all $v\in V$.
+                \item \emph{Goal}: Min.
+            \end{itemize}
+
+            \item \textbf{Minimum Weighted Vertex Cover}
+            \begin{itemize}
+                \item \emph{Instance}: A graph $G=(V,E)$, and a cost function $c:V\rightarrow\mathbb{N}$.
+                \item \emph{Solution}: A subset $V'\subseteq V$ that for each $(v_i,v_j)\in E$, $v_i\in V'$ or $v_j\in V'$.
+                \item \emph{Measure}: Total cost $\sum\limits_{v\in V'}c(v)$.
+                \item \emph{Goal}: Min.
+            \end{itemize}
+        \end{enumerate}
+    \end{solution}
+
+\end{enumerate}
+
+\vspace{20pt}
+
+\textbf{Remark:} You need to include your .pdf and .tex files in your uploaded .zip file.
+
+%========================================================================
+\end{document}
